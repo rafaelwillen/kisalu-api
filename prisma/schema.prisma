@@ -69,12 +69,23 @@ model Activity {
   finishingDate DateTime?
   linkedProject Project?
   linkedService Service?
-  // review Review?
+  review Review?
   hiredProvider Provider @relation(fields: [providerId], references: [id])
   client Client @relation(fields: [clientId], references: [id])
   clientId String
   providerId String
   @@map("activity")
+}
+
+model Review {
+  id String @id @default(uuid())
+  revieweName String
+  email String
+  rating Int
+  comment String
+  date DateTime @default(now())
+  relatedActivity Activity @relation(fields: [activityId], references: [id])
+  activityId String @unique
 }
 
 model Service {
