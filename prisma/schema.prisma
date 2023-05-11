@@ -9,3 +9,132 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum FileType {
+  Image
+  Document
+}
+
+enum Gender {
+  Male
+  Female
+}
+
+enum DisputeState {
+  UnderReview
+  ResolutionProposed
+  Closed
+  Escalated
+}
+
+model Client {
+  id String @id @default(uuid())
+  email String @unique
+  password String
+  firstName String
+  lastName String
+  phoneNumber String
+  avatarImage String?
+  registerDate DateTime @default(now())
+  lastLogin DateTime @default(now())
+  isActivated Boolean @default(true)
+  gender Gender
+  disputes Dispute[]
+  conversations Conversation[]
+  projects Project[]
+  // Many Activity
+  @@map("client")
+}
+
+model Project {
+  id String @id @default(uuid())
+  title String
+  description String
+  budget Int
+  bannerImage String?
+  publishDate DateTime @default(now())
+  viewsCount Int @default(0)
+  owner Client @relation(fields: [ownerId], references: [id])
+  ownerId String
+  // Many Bidding
+}
+
+model Provider {
+  id String @id @default(uuid())
+  email String @unique
+  password String
+  firstName String
+  lastName String
+  phoneNumber String
+  avatarImage String?
+  registerDate DateTime @default(now())
+  lastLogin DateTime @default(now())
+  isVerified Boolean @default(false)
+  gender Gender
+    disputes Dispute[]
+  // Many Conversation
+  // Many Educational Info
+  // Many Experience Info
+  // Many Portfolio
+  // One Address
+  // Many Service
+  // Many Bidding
+  // Many Activity
+  @@map("provider")
+}
+
+model Dispute {
+  id String @id @default(uuid())
+  title String
+  reason String
+  dateRaised DateTime @default(now())
+  resolution String?
+  status DisputeState @default(UnderReview)
+  dateResolved DateTime?
+  administrator Administrator @relation(fields: [administratorId], references: [id])
+  client Client @relation(fields: [clientId], references: [id])
+  provider Provider @relation(fields: [providerId], references: [id])
+  attachments Attachment[]
+  providerId String
+  clientId String
+  administratorId String
+  @@map("dispute")
+}
+
+model Conversation {
+  id String @id @default(uuid())
+  client Client @relation(fields: [clientId], references: [id])
+  // Many Message
+  // One Provider
+  clientId String
+  @@map("conversation")
+}
+
+
+
+
+model Administrator {
+  id String @id @default(uuid())
+  name String
+  email String @unique
+  password String
+  createdAt DateTime @default(now())
+  lastLogin DateTime @default(now())
+  disputes Dispute[]
+  username String @unique
+}
+
+model Attachment {
+  id String @id @default(uuid())
+  name String
+  url String
+  type FileType
+  createdAt DateTime @default(now())
+  dispute Dispute @relation(fields: [disputeId], references: [id])
+  disputeId String
+}
+
+model Skill {
+  id String @id @default(uuid())
+  name String
+}
