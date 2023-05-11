@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsup src",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "prisma:studio": "prisma studio",
+    "migrate:dev": "prisma migrate dev"
   },
   "dependencies": {
     "@fastify/cors": "^8.2.1",
