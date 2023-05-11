@@ -1,14 +1,14 @@
 import dotenv from "dotenv";
 import fastify, { FastifyBaseLogger, FastifyServerOptions } from "fastify";
 import { IncomingMessage, Server, ServerResponse } from "http";
-import configCORS from "./configs/cors";
+import initConfig from "./configs";
 import { PORT } from "./constants";
 import routes from "./routes";
 dotenv.config();
 
 async function main() {
   try {
-    const app = build();
+    const app = await build();
     const address = await app.listen({ port: PORT });
     console.log(`Server running on ${address}`);
   } catch (error) {
@@ -17,20 +17,15 @@ async function main() {
   }
 }
 
-function build(
+async function build(
   options?: FastifyServerOptions<
     Server<typeof IncomingMessage, typeof ServerResponse>,
     FastifyBaseLogger
   >
 ) {
   const app = fastify(options);
-
-  configCORS(app);
-
-  // Add Custom configs
-
+  await initConfig(app);
   app.register(routes, { prefix: "/api" });
-
   return app;
 }
 
