@@ -101,9 +101,23 @@ model Service {
   state ServiceState
   isHighlighted Boolean @default(false)
   isRemote Boolean @default(false)
-  // associatedCategory Category
   linkedActivity Activity? @relation(fields: [linkedActivityId], references: [id])
   linkedActivityId String? @unique
+  associatedCategory Category @relation(fields: [associatedCategoryId], references: [id])
+  associatedCategoryId String
+}
+
+model Category {
+  id String @id @default(uuid())
+  name String
+  description String
+  cardImageUrl String
+  bannerImageUrl String
+  createdBy Administrator @relation(fields: [administratorId], references: [id])
+  administratorId String
+  services Service[]
+  projects Project[]
+  relatedSkills SkillsInCategories[]
 }
 
 model Project {
@@ -120,7 +134,8 @@ model Project {
   linkedActivityId String? @unique
   ownerId String
   // Many Bidding
-  // associatedCategory Category
+  associatedCategory Category @relation(fields: [associatedCategoryId], references: [id])
+  associatedCategoryId String
 }
 
 model Provider {
@@ -184,8 +199,9 @@ model Administrator {
   password String
   createdAt DateTime @default(now())
   lastLogin DateTime @default(now())
-  disputes Dispute[]
   username String @unique
+  disputes Dispute[]
+  createdCategories Category[]
 }
 
 model Attachment {
@@ -198,7 +214,16 @@ model Attachment {
   disputeId String
 }
 
+model SkillsInCategories {
+  category Category @relation(fields: [categoryId], references: [id])
+  categoryId String
+  skill Skill @relation(fields: [skillId], references: [id])
+  skillId String
+  @@id([categoryId, skillId])
+}
+
 model Skill {
   id String @id @default(uuid())
   name String
+  relatedCategories SkillsInCategories[]
 }
