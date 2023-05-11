@@ -27,6 +27,15 @@ enum DisputeState {
   Escalated
 }
 
+enum ActivityState {
+  Active
+  OnHold
+  Finished
+  OnDispute
+  Cancelled
+  OnRevision
+}
+
 model Client {
   id String @id @default(uuid())
   email String @unique
@@ -42,8 +51,25 @@ model Client {
   disputes Dispute[]
   conversations Conversation[]
   projects Project[]
-  // Many Activity
+  activities Activity[]
   @@map("client")
+}
+
+model Activity {
+  id String @id @default(uuid())
+  servicePrice Int
+  state ActivityState
+  startDate DateTime
+  estimatedFinishDate DateTime
+  finishingDate DateTime?
+  linkedProject Project?
+  // linkedService Service?
+  // review Review?
+  hiredProvider Provider @relation(fields: [providerId], references: [id])
+  client Client @relation(fields: [clientId], references: [id])
+  clientId String
+  providerId String
+  @@map("activity")
 }
 
 model Project {
@@ -55,6 +81,8 @@ model Project {
   publishDate DateTime @default(now())
   viewsCount Int @default(0)
   owner Client @relation(fields: [ownerId], references: [id])
+  linkedActivity Activity? @relation(fields: [linkedActivityId], references: [id])
+  linkedActivityId String? @unique
   ownerId String
   // Many Bidding
 }
@@ -71,7 +99,7 @@ model Provider {
   lastLogin DateTime @default(now())
   isVerified Boolean @default(false)
   gender Gender
-    disputes Dispute[]
+  disputes Dispute[]
   // Many Conversation
   // Many Educational Info
   // Many Experience Info
@@ -79,7 +107,7 @@ model Provider {
   // One Address
   // Many Service
   // Many Bidding
-  // Many Activity
+  activities Activity[]
   @@map("provider")
 }
 
