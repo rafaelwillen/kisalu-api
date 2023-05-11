@@ -57,10 +57,11 @@ model Client {
   password String
   firstName String
   lastName String
-  phoneNumber String
-  avatarImage String?
+  phoneNumber String @unique
+  avatarImageUrl String?
   registerDate DateTime @default(now())
   lastLogin DateTime @default(now())
+  // Used to check if the user is suspended by an administrator or not
   isActivated Boolean @default(true)
   gender Gender
   disputes Dispute[]
@@ -77,28 +78,33 @@ model Activity {
   state ActivityState
   startDate DateTime
   estimatedFinishDate DateTime
-  finishingDate DateTime?
+  realFinishedDate DateTime?
+  // An activity can only have an associated project or service. Can not have both
   linkedProject Project?
   linkedService Service?
   review Review?
+  isRemote Boolean @default(false)
+  // When the isRemote is false, a location is required
+  location Address?
   hiredProvider Provider @relation(fields: [providerId], references: [id])
   client Client @relation(fields: [clientId], references: [id])
   clientId String
   providerId String
-  isRemote Boolean @default(false)
-  location Address?
   @@map("activity")
 }
 
 model Review {
   id String @id @default(uuid())
-  revieweName String
-  email String
+  // This will be the client name but it will be stored like this for performance reasons
+  reviewerName String
+  email String @unique
+  // Domain is 1 to 5
   rating Int
   comment String
   date DateTime @default(now())
   relatedActivity Activity @relation(fields: [activityId], references: [id])
   activityId String @unique
+  @@map("review")
 }
 
 model Service {
@@ -115,11 +121,12 @@ model Service {
   isHighlighted Boolean @default(false)
   isRemote Boolean @default(false)
   linkedActivity Activity? @relation(fields: [linkedActivityId], references: [id])
-  linkedActivityId String? @unique
   associatedCategory Category @relation(fields: [associatedCategoryId], references: [id])
-  associatedCategoryId String
   owner Provider @relation(fields: [ownerId], references: [id])
+  linkedActivityId String? @unique
+  associatedCategoryId String
   ownerId String
+  @@map("service")
 }
 
 model Category {
@@ -128,11 +135,12 @@ model Category {
   description String
   cardImageUrl String
   bannerImageUrl String
-  createdBy Administrator @relation(fields: [administratorId], references: [id])
-  administratorId String
   services Service[]
   projects Project[]
   relatedSkills SkillsInCategories[]
+  createdBy Administrator @relation(fields: [administratorId], references: [id])
+  administratorId String
+  @@map("category")
 }
 
 model Project {
@@ -144,13 +152,15 @@ model Project {
   publishDate DateTime @default(now())
   viewsCount Int @default(0)
   state ServiceState
+  biddings Bidding[]
+  attachments Attachment[]
   owner Client @relation(fields: [ownerId], references: [id])
   linkedActivity Activity? @relation(fields: [linkedActivityId], references: [id])
+  associatedCategory Category @relation(fields: [associatedCategoryId], references: [id])
   linkedActivityId String? @unique
   ownerId String
-  biddings Bidding[]
-  associatedCategory Category @relation(fields: [associatedCategoryId], references: [id])
   associatedCategoryId String
+  @@map("project")
 }
 
 model Bidding {
@@ -162,6 +172,7 @@ model Bidding {
   projectId String
   providerId String
   @@id([projectId, providerId])
+  @@map("bidding")
 }
 
 model Provider {
@@ -170,10 +181,12 @@ model Provider {
   password String
   firstName String
   lastName String
-  phoneNumber String
+  phoneNumber String @unique
   avatarImage String?
   registerDate DateTime @default(now())
   lastLogin DateTime @default(now())
+  // Used to check if the user is suspended by an administrator or not
+  isActivated Boolean @default(true)
   isVerified Boolean @default(false)
   gender Gender
   disputes Dispute[]
@@ -192,13 +205,14 @@ model Provider {
 model EducationalInfo {
   id String @id @default(uuid())
   institutionName String
-  title String
+  degree String
   description String
   startDate DateTime
   endDate DateTime?
   inProgress Boolean @default(false)
   provider Provider @relation(fields: [providerId], references: [id])
   providerId String
+  @@map("educationalInfo")
 }
 
 model ExperienceInfo {
@@ -211,28 +225,31 @@ model ExperienceInfo {
   inProgress Boolean @default(false)
   provider Provider @relation(fields: [providerId], references: [id])
   providerId String
+  @@map("experienceInfo")
 }
 
 model Portfolio {
   id String @id @default(uuid())
   title String
   description String
-  projectImages String[]
+  projectImagesUrls String[]
   projectLink String?
   provider Provider @relation(fields: [providerId], references: [id])
   providerId String
+  @@map("portfolio")
 }
 
 model Address {
- id String @id @default(uuid())
+  id String @id @default(uuid())
   street String
   county String
   province String
-  mapLocation String
+  mapLocationLink String
   provider Provider @relation(fields: [providerId], references: [id])
-  providerId String @unique
   activity Activity @relation(fields: [activityId], references: [id])
+  providerId String @unique
   activityId String @unique
+  @@map("address")
 }
 
 model Dispute {
@@ -243,10 +260,10 @@ model Dispute {
   resolution String?
   status DisputeState @default(UnderReview)
   dateResolved DateTime?
+  attachments Attachment[]
   administrator Administrator @relation(fields: [administratorId], references: [id])
   client Client @relation(fields: [clientId], references: [id])
   provider Provider @relation(fields: [providerId], references: [id])
-  attachments Attachment[]
   providerId String
   clientId String
   administratorId String
@@ -255,9 +272,9 @@ model Dispute {
 
 model Conversation {
   id String @id @default(uuid())
+  messages Message[]
   client Client @relation(fields: [clientId], references: [id])
   provider Provider @relation(fields: [providerId], references: [id])
-  messages Message[]
   providerId String
   clientId String
   @@map("conversation")
@@ -276,6 +293,7 @@ model Message {
   state MessageState @default(Sent)
   messageType MessageType @default(Text)
   fileAttachment String?
+  @@map("meessage")
 }
 
 model Administrator {
@@ -288,6 +306,7 @@ model Administrator {
   username String @unique
   disputes Dispute[]
   createdCategories Category[]
+  @@map("administrator")
 }
 
 model Attachment {
@@ -296,20 +315,25 @@ model Attachment {
   url String
   type FileType
   createdAt DateTime @default(now())
-  dispute Dispute @relation(fields: [disputeId], references: [id])
-  disputeId String
+  dispute Dispute? @relation(fields: [disputeId], references: [id])
+  project Project? @relation(fields: [projectId], references: [id])
+  projectId String?
+  disputeId String?
+  @@map("attachment")
 }
 
 model SkillsInCategories {
   category Category @relation(fields: [categoryId], references: [id])
-  categoryId String
   skill Skill @relation(fields: [skillId], references: [id])
+  categoryId String
   skillId String
   @@id([categoryId, skillId])
+  @@map("skillsInCategories")
 }
 
 model Skill {
   id String @id @default(uuid())
   name String
   relatedCategories SkillsInCategories[]
+  @@map("skill")
 }
