@@ -36,6 +36,11 @@ enum ActivityState {
   OnRevision
 }
 
+enum ServiceState {
+  Available
+  Unavailable
+}
+
 model Client {
   id String @id @default(uuid())
   email String @unique
@@ -63,13 +68,31 @@ model Activity {
   estimatedFinishDate DateTime
   finishingDate DateTime?
   linkedProject Project?
-  // linkedService Service?
+  linkedService Service?
   // review Review?
   hiredProvider Provider @relation(fields: [providerId], references: [id])
   client Client @relation(fields: [clientId], references: [id])
   clientId String
   providerId String
   @@map("activity")
+}
+
+model Service {
+  id String @id @default(uuid())
+  title  String
+  description String
+  featuredImagesUrls String[]
+  minimumPrice Int
+  bannerImage String?
+  publishDate DateTime @default(now())
+  viewsCount Int @default(0)
+  duration String
+  state ServiceState
+  isHighlighted Boolean @default(false)
+  isRemote Boolean @default(false)
+  // associatedCategory Category
+  linkedActivity Activity? @relation(fields: [linkedActivityId], references: [id])
+  linkedActivityId String? @unique
 }
 
 model Project {
@@ -80,11 +103,13 @@ model Project {
   bannerImage String?
   publishDate DateTime @default(now())
   viewsCount Int @default(0)
+  state ServiceState
   owner Client @relation(fields: [ownerId], references: [id])
   linkedActivity Activity? @relation(fields: [linkedActivityId], references: [id])
   linkedActivityId String? @unique
   ownerId String
   // Many Bidding
+  // associatedCategory Category
 }
 
 model Provider {
