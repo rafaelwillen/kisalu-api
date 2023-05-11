@@ -1,0 +1,23 @@
+{
+  "name": "kisalu-api",
+  "version": "1.0.0",
+  "main": "server.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "tsx src/server.ts --watch",
+    "build": "tsup src",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@fastify/cors": "^8.2.1",
+    "dotenv": "^16.0.3",
+    "fastify": "^4.17.0",
+    "zod": "^3.21.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.1.2",
+    "tsup": "^6.7.0",
+    "tsx": "^3.12.7",
+    "typescript": "^5.0.4"
+  }
+}
