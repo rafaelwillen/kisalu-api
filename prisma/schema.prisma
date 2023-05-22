@@ -52,288 +52,310 @@ enum MessageType {
 }
 
 model Client {
-  id String @id @default(uuid())
-  email String @unique
-  password String
-  firstName String
-  lastName String
-  phoneNumber String @unique
+  id             String         @id @default(uuid())
+  email          String         @unique
+  password       String
+  firstName      String
+  lastName       String
+  phoneNumber    String         @unique
   avatarImageUrl String?
-  registerDate DateTime @default(now())
-  lastLogin DateTime @default(now())
+  registerDate   DateTime       @default(now())
+  lastLogin      DateTime       @default(now())
   // Used to check if the user is suspended by an administrator or not
-  isActivated Boolean @default(true)
-  gender Gender
-  disputes Dispute[]
-  conversations Conversation[]
-  projects Project[]
-  activities Activity[]
-  messages Message[]
+  isActivated    Boolean        @default(true)
+  gender         Gender
+  address        Address?       @relation(fields: [addressId], references: [id])
+  disputes       Dispute[]
+  conversations  Conversation[]
+  projects       Project[]
+  activities     Activity[]
+  messages       Message[]
+  addressId      String
+
   @@map("client")
 }
 
 model Activity {
-  id String @id @default(uuid())
-  servicePrice Int
-  state ActivityState
-  startDate DateTime
+  id                  String        @id @default(uuid())
+  servicePrice        Int
+  state               ActivityState
+  startDate           DateTime
   estimatedFinishDate DateTime
-  realFinishedDate DateTime?
+  realFinishedDate    DateTime?
   // An activity can only have an associated project or service. Can not have both
-  linkedProject Project?
-  linkedService Service?
-  review Review?
-  isRemote Boolean @default(false)
+  linkedProject       Project?
+  linkedService       Service?
+  review              Review?
+  isRemote            Boolean       @default(false)
   // When the isRemote is false, a location is required
-  location Address?
-  hiredProvider Provider @relation(fields: [providerId], references: [id])
-  client Client @relation(fields: [clientId], references: [id])
-  clientId String
-  providerId String
+  location            Address?
+  hiredProvider       Provider      @relation(fields: [providerId], references: [id])
+  client              Client        @relation(fields: [clientId], references: [id])
+  clientId            String
+  providerId          String
+
   @@map("activity")
 }
 
 model Review {
-  id String @id @default(uuid())
+  id              String   @id @default(uuid())
   // This will be the client name but it will be stored like this for performance reasons
-  reviewerName String
-  email String @unique
+  reviewerName    String
+  email           String   @unique
   // Domain is 1 to 5
-  rating Int
-  comment String
-  date DateTime @default(now())
+  rating          Int
+  comment         String
+  date            DateTime @default(now())
   relatedActivity Activity @relation(fields: [activityId], references: [id])
-  activityId String @unique
+  activityId      String   @unique
+
   @@map("review")
 }
 
 model Service {
-  id String @id @default(uuid())
-  title  String
-  description String
-  featuredImagesUrls String[]
-  minimumPrice Int
-  bannerImage String?
-  publishDate DateTime @default(now())
-  viewsCount Int @default(0)
-  duration String
-  state ServiceState
-  isHighlighted Boolean @default(false)
-  isRemote Boolean @default(false)
-  linkedActivity Activity? @relation(fields: [linkedActivityId], references: [id])
-  associatedCategory Category @relation(fields: [associatedCategoryId], references: [id])
-  owner Provider @relation(fields: [ownerId], references: [id])
-  linkedActivityId String? @unique
+  id                   String       @id @default(uuid())
+  title                String
+  description          String
+  featuredImagesUrls   String[]
+  minimumPrice         Int
+  bannerImage          String?
+  publishDate          DateTime     @default(now())
+  viewsCount           Int          @default(0)
+  duration             String
+  state                ServiceState
+  isHighlighted        Boolean      @default(false)
+  isRemote             Boolean      @default(false)
+  linkedActivity       Activity?    @relation(fields: [linkedActivityId], references: [id])
+  associatedCategory   Category     @relation(fields: [associatedCategoryId], references: [id])
+  owner                Provider     @relation(fields: [ownerId], references: [id])
+  linkedActivityId     String?      @unique
   associatedCategoryId String
-  ownerId String
+  ownerId              String
+
   @@map("service")
 }
 
 model Category {
-  id String @id @default(uuid())
-  name String
-  description String
-  cardImageUrl String
-  bannerImageUrl String
-  services Service[]
-  projects Project[]
-  relatedSkills SkillsInCategories[]
-  createdBy Administrator @relation(fields: [administratorId], references: [id])
+  id              String               @id @default(uuid())
+  name            String
+  description     String
+  cardImageUrl    String
+  bannerImageUrl  String
+  services        Service[]
+  projects        Project[]
+  relatedSkills   SkillsInCategories[]
+  createdBy       Administrator        @relation(fields: [administratorId], references: [id])
   administratorId String
+
   @@map("category")
 }
 
 model Project {
-  id String @id @default(uuid())
-  title String
-  description String
-  budget Int
-  bannerImage String?
-  publishDate DateTime @default(now())
-  viewsCount Int @default(0)
-  state ServiceState
-  biddings Bidding[]
-  attachments Attachment[]
-  owner Client @relation(fields: [ownerId], references: [id])
-  linkedActivity Activity? @relation(fields: [linkedActivityId], references: [id])
-  associatedCategory Category @relation(fields: [associatedCategoryId], references: [id])
-  linkedActivityId String? @unique
-  ownerId String
+  id                   String       @id @default(uuid())
+  title                String
+  description          String
+  budget               Int
+  bannerImage          String?
+  publishDate          DateTime     @default(now())
+  viewsCount           Int          @default(0)
+  state                ServiceState
+  biddings             Bidding[]
+  attachments          Attachment[]
+  owner                Client       @relation(fields: [ownerId], references: [id])
+  linkedActivity       Activity?    @relation(fields: [linkedActivityId], references: [id])
+  associatedCategory   Category     @relation(fields: [associatedCategoryId], references: [id])
+  linkedActivityId     String?      @unique
+  ownerId              String
   associatedCategoryId String
+
   @@map("project")
 }
 
 model Bidding {
-  proposedPrice Int
+  proposedPrice       Int
   estimatedFinishDate DateTime
-  coverLetter String
-  provider Provider @relation(fields: [providerId], references: [id])
-  project Project @relation(fields: [projectId], references: [id])
-  projectId String
-  providerId String
+  coverLetter         String
+  provider            Provider @relation(fields: [providerId], references: [id])
+  project             Project  @relation(fields: [projectId], references: [id])
+  projectId           String
+  providerId          String
+
   @@id([projectId, providerId])
   @@map("bidding")
 }
 
 model Provider {
-  id String @id @default(uuid())
-  email String @unique
-  password String
-  firstName String
-  lastName String
-  phoneNumber String @unique
-  avatarImage String?
-  registerDate DateTime @default(now())
-  lastLogin DateTime @default(now())
+  id            String            @id @default(uuid())
+  email         String            @unique
+  password      String
+  firstName     String
+  lastName      String
+  phoneNumber   String            @unique
+  avatarImage   String?
+  registerDate  DateTime          @default(now())
+  lastLogin     DateTime          @default(now())
   // Used to check if the user is suspended by an administrator or not
-  isActivated Boolean @default(true)
-  isVerified Boolean @default(false)
-  gender Gender
-  disputes Dispute[]
+  isActivated   Boolean           @default(true)
+  isVerified    Boolean           @default(false)
+  gender        Gender
+  disputes      Dispute[]
   conversations Conversation[]
-  education EducationalInfo[]
-  experience ExperienceInfo[]
-  portfolios Portfolio[]
-  address Address?
-  services Service[]
-  biddings Bidding[]
-  activities Activity[]
-  messages Message[]
+  education     EducationalInfo[]
+  experience    ExperienceInfo[]
+  portfolios    Portfolio[]
+  address       Address?
+  services      Service[]
+  biddings      Bidding[]
+  activities    Activity[]
+  messages      Message[]
+
   @@map("provider")
 }
 
 model EducationalInfo {
-  id String @id @default(uuid())
+  id              String    @id @default(uuid())
   institutionName String
-  degree String
-  description String
-  startDate DateTime
-  endDate DateTime?
-  inProgress Boolean @default(false)
-  provider Provider @relation(fields: [providerId], references: [id])
-  providerId String
+  degree          String
+  description     String
+  startDate       DateTime
+  endDate         DateTime?
+  inProgress      Boolean   @default(false)
+  provider        Provider  @relation(fields: [providerId], references: [id])
+  providerId      String
+
   @@map("educationalInfo")
 }
 
 model ExperienceInfo {
-  id String @id @default(uuid())
+  id          String    @id @default(uuid())
   companyName String
-  title String
+  title       String
   description String
-  startDate DateTime
-  endDate DateTime?
-  inProgress Boolean @default(false)
-  provider Provider @relation(fields: [providerId], references: [id])
-  providerId String
+  startDate   DateTime
+  endDate     DateTime?
+  inProgress  Boolean   @default(false)
+  provider    Provider  @relation(fields: [providerId], references: [id])
+  providerId  String
+
   @@map("experienceInfo")
 }
 
 model Portfolio {
-  id String @id @default(uuid())
-  title String
-  description String
+  id                String   @id @default(uuid())
+  title             String
+  description       String
   projectImagesUrls String[]
-  projectLink String?
-  provider Provider @relation(fields: [providerId], references: [id])
-  providerId String
+  projectLink       String?
+  provider          Provider @relation(fields: [providerId], references: [id])
+  providerId        String
+
   @@map("portfolio")
 }
 
 model Address {
-  id String @id @default(uuid())
-  street String
-  county String
-  province String
+  id              String   @id @default(uuid())
+  street          String
+  county          String
+  province        String
   mapLocationLink String
-  provider Provider @relation(fields: [providerId], references: [id])
-  activity Activity @relation(fields: [activityId], references: [id])
-  providerId String @unique
-  activityId String @unique
+  provider        Provider @relation(fields: [providerId], references: [id])
+  activity        Activity @relation(fields: [activityId], references: [id])
+  providerId      String   @unique
+  activityId      String   @unique
+  Client          Client[]
+
   @@map("address")
 }
 
 model Dispute {
-  id String @id @default(uuid())
-  title String
-  reason String
-  dateRaised DateTime @default(now())
-  resolution String?
-  status DisputeState @default(UnderReview)
-  dateResolved DateTime?
-  attachments Attachment[]
-  administrator Administrator @relation(fields: [administratorId], references: [id])
-  client Client @relation(fields: [clientId], references: [id])
-  provider Provider @relation(fields: [providerId], references: [id])
-  providerId String
-  clientId String
+  id              String        @id @default(uuid())
+  title           String
+  reason          String
+  dateRaised      DateTime      @default(now())
+  resolution      String?
+  status          DisputeState  @default(UnderReview)
+  dateResolved    DateTime?
+  attachments     Attachment[]
+  administrator   Administrator @relation(fields: [administratorId], references: [id])
+  client          Client        @relation(fields: [clientId], references: [id])
+  provider        Provider      @relation(fields: [providerId], references: [id])
+  providerId      String
+  clientId        String
   administratorId String
+
   @@map("dispute")
 }
 
 model Conversation {
-  id String @id @default(uuid())
-  messages Message[]
-  client Client @relation(fields: [clientId], references: [id])
-  provider Provider @relation(fields: [providerId], references: [id])
+  id         String    @id @default(uuid())
+  messages   Message[]
+  client     Client    @relation(fields: [clientId], references: [id])
+  provider   Provider  @relation(fields: [providerId], references: [id])
   providerId String
-  clientId String
+  clientId   String
+
   @@map("conversation")
 }
 
 model Message {
-  id String @id @default(uuid())
-  content String
-  timestamp DateTime @default(now())
-  senderClient Client? @relation(fields: [senderClientId], references: [id])
-  senderProvider Provider? @relation(fields: [senderProviderId], references: [id])
-  conversation Conversation @relation(fields: [conversationId], references: [id])
-  conversationId String
-  senderClientId String?
+  id               String       @id @default(uuid())
+  content          String
+  timestamp        DateTime     @default(now())
+  senderClient     Client?      @relation(fields: [senderClientId], references: [id])
+  senderProvider   Provider?    @relation(fields: [senderProviderId], references: [id])
+  conversation     Conversation @relation(fields: [conversationId], references: [id])
+  conversationId   String
+  senderClientId   String?
   senderProviderId String?
-  state MessageState @default(Sent)
-  messageType MessageType @default(Text)
-  fileAttachment String?
+  state            MessageState @default(Sent)
+  messageType      MessageType  @default(Text)
+  fileAttachment   String?
+
   @@map("meessage")
 }
 
 model Administrator {
-  id String @id @default(uuid())
-  name String
-  email String @unique
-  password String
-  createdAt DateTime @default(now())
-  lastLogin DateTime @default(now())
-  username String @unique
-  disputes Dispute[]
+  id                String     @id @default(uuid())
+  name              String
+  email             String     @unique
+  password          String
+  createdAt         DateTime   @default(now())
+  lastLogin         DateTime   @default(now())
+  username          String     @unique
+  disputes          Dispute[]
   createdCategories Category[]
+
   @@map("administrator")
 }
 
 model Attachment {
-  id String @id @default(uuid())
-  name String
-  url String
-  type FileType
+  id        String   @id @default(uuid())
+  name      String
+  url       String
+  type      FileType
   createdAt DateTime @default(now())
-  dispute Dispute? @relation(fields: [disputeId], references: [id])
-  project Project? @relation(fields: [projectId], references: [id])
+  dispute   Dispute? @relation(fields: [disputeId], references: [id])
+  project   Project? @relation(fields: [projectId], references: [id])
   projectId String?
   disputeId String?
+
   @@map("attachment")
 }
 
 model SkillsInCategories {
-  category Category @relation(fields: [categoryId], references: [id])
-  skill Skill @relation(fields: [skillId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id])
+  skill      Skill    @relation(fields: [skillId], references: [id])
   categoryId String
-  skillId String
+  skillId    String
+
   @@id([categoryId, skillId])
   @@map("skillsInCategories")
 }
 
 model Skill {
-  id String @id @default(uuid())
-  name String
+  id                String               @id @default(uuid())
+  name              String
   relatedCategories SkillsInCategories[]
+
   @@map("skill")
 }

@@ -32,6 +32,7 @@ CREATE TABLE "client" (
     "lastLogin" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "isActivated" BOOLEAN NOT NULL DEFAULT true,
     "gender" "Gender" NOT NULL,
+    "addressId" TEXT NOT NULL,
 
     CONSTRAINT "client_pkey" PRIMARY KEY ("id")
 );
@@ -313,6 +314,9 @@ CREATE UNIQUE INDEX "administrator_email_key" ON "administrator"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "administrator_username_key" ON "administrator"("username");
+
+-- AddForeignKey
+ALTER TABLE "client" ADD CONSTRAINT "client_addressId_fkey" FOREIGN KEY ("addressId") REFERENCES "address"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "activity" ADD CONSTRAINT "activity_providerId_fkey" FOREIGN KEY ("providerId") REFERENCES "provider"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
