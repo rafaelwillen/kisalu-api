@@ -12,8 +12,12 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
+const categoriesImagesRef = ref(getStorage(app), "categories-images/");
+
 export const storage = {
-  ref,
+  ref: {
+    categories: categoriesImagesRef,
+  },
   storage: getStorage(app),
   uploadBytes,
   getDownloadURL,
