@@ -146,6 +146,7 @@ model Category {
   relatedSkills   SkillsInCategories[]
   createdBy       Administrator        @relation(fields: [administratorId], references: [id])
   administratorId String
+  createddAt      DateTime             @default(now())
 
   @@map("category")
 }
