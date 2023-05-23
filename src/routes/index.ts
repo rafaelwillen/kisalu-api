@@ -1,14 +1,18 @@
 import { FastifyInstance } from "fastify";
 import adminRoutes from "./admin";
 
-async function routes(fastify: FastifyInstance) {
+async function routes(
+  fastify: FastifyInstance,
+  options: any,
+  done: () => void
+) {
+  fastify.register(adminRoutes, { prefix: "/admin" });
   fastify.get("/", (_, reply) => {
     reply.send({
       message: "Server Online",
     });
-
-    fastify.register(adminRoutes, { prefix: "/admin" });
   });
+  done();
 }
 
 export default routes;
