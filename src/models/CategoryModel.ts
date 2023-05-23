@@ -1,4 +1,4 @@
-import { Category } from "@prisma/client";
+import { Administrator, Category, Project, Service } from "@prisma/client";
 import AbstractDAO from "./AbstractDAO";
 
 interface ICreatableCategory {
@@ -13,6 +13,12 @@ interface IEditableCategory
   extends Omit<ICreatableCategory, "administratorId"> {
   id: string;
 }
+
+export type CompleteCategoryType = Category & {
+  services: Service[];
+  projects: Project[];
+  createdBy: Administrator;
+};
 
 export default class CategoryModel extends AbstractDAO {
   constructor() {
@@ -43,9 +49,11 @@ export default class CategoryModel extends AbstractDAO {
     }
   }
 
-  async getAll(): Promise<Category[]> {
+  async getAll(): Promise<CompleteCategoryType[]> {
     try {
-      const categories = await this.prisma.category.findMany();
+      const categories = await this.prisma.category.findMany({
+        include: { projects: {}, services: {}, createdBy: {} },
+      });
       return categories;
     } catch (error) {
       console.log(error);
@@ -53,12 +61,13 @@ export default class CategoryModel extends AbstractDAO {
     }
   }
 
-  async getSingle(id: string): Promise<Category | null> {
+  async getSingle(id: string): Promise<CompleteCategoryType | null> {
     try {
       const category = await this.prisma.category.findUnique({
         where: {
           id,
         },
+        include: { projects: {}, services: {}, createdBy: {} },
       });
       return category;
     } catch (error) {
