@@ -1,5 +1,4 @@
 import { AdministratorRepository } from "@/repository";
-import { serialize } from "cookie";
 import { FastifyReply, FastifyRequest } from "fastify";
 import z from "zod";
 
@@ -39,19 +38,7 @@ export default class AuthenticationService {
           },
         }
       );
-
-      const serializedCookie = serialize("token", `Bearer ${token}`, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        path: "/",
-        maxAge: 60 * 60, //1h
-      });
-      reply
-        .headers({
-          "Set-Cookie": serializedCookie,
-        })
-        .send({ token });
+      reply.send({ token });
     } catch (error) {
       this.administratorRepository.close();
       if (error instanceof z.ZodError)
