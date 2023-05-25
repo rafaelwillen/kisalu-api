@@ -323,6 +323,7 @@ model Administrator {
   createdAt         DateTime   @default(now())
   lastLogin         DateTime   @default(now())
   username          String     @unique
+  loginToken        String?    @unique
   disputes          Dispute[]
   createdCategories Category[]
 
