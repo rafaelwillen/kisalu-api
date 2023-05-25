@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
-export default abstract class AbstractDAO {
+export default abstract class Repository {
   protected prisma: PrismaClient;
 
   constructor() {

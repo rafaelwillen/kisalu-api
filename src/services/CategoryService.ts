@@ -1,14 +1,14 @@
-import { CategoryModel } from "@/models";
+import { CategoryRepository } from "@/repository";
 import { noSymbolRegex } from "@/utils/regex";
 import { FastifyReply, FastifyRequest } from "fastify";
 import underscore from "underscore";
 import { z } from "zod";
 
 export default class CategoryService {
-  private categoryModel: CategoryModel | undefined;
+  private categoryModel: CategoryRepository | undefined;
 
   async createCategory(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryModel = new CategoryModel();
+    this.categoryModel = new CategoryRepository();
     try {
       const categoryBody = parseBodyForCreateCategory(request);
       const category = await this.categoryModel.create({
@@ -28,7 +28,7 @@ export default class CategoryService {
   }
 
   async getAllCategories(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryModel = new CategoryModel();
+    this.categoryModel = new CategoryRepository();
     try {
       const categories = await this.categoryModel.getAll();
       reply.send(
@@ -49,13 +49,13 @@ export default class CategoryService {
   }
 
   async getCategoryById(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryModel = new CategoryModel();
+    this.categoryModel = new CategoryRepository();
     try {
-    const { id: categoryId } = z
-      .object({
-        id: z.string().nonempty().uuid(),
-      })
-      .parse(request.params);
+      const { id: categoryId } = z
+        .object({
+          id: z.string().nonempty().uuid(),
+        })
+        .parse(request.params);
       const category = await this.categoryModel.getSingle(categoryId);
       if (!category) {
         reply.code(404).send({ message: "Category not found" });
@@ -81,24 +81,24 @@ export default class CategoryService {
   }
 
   async deleteCategory(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryModel = new CategoryModel();
+    this.categoryModel = new CategoryRepository();
     try {
       const { id: categoryId } = z
         .object({
           id: z.string().nonempty().uuid(),
         })
         .parse(request.params);
-        await this.categoryModel.delete(categoryId);
+      await this.categoryModel.delete(categoryId);
 
-        reply.send({ message: "Category deleted" });
-        this.categoryModel.close();
-      } catch (error) {
-        this.categoryModel.close();
-        if (error instanceof z.ZodError)
-          reply.code(400).send({ message: "Bad request", errors: error.errors });
-        console.error(error, "Category Service Error");
-        reply.code(500).send({ message: "Internal server error" });
-      }
+      reply.send({ message: "Category deleted" });
+      this.categoryModel.close();
+    } catch (error) {
+      this.categoryModel.close();
+      if (error instanceof z.ZodError)
+        reply.code(400).send({ message: "Bad request", errors: error.errors });
+      console.error(error, "Category Service Error");
+      reply.code(500).send({ message: "Internal server error" });
+    }
   }
 }
 

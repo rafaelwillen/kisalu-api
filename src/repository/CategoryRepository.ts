@@ -1,5 +1,5 @@
 import { Administrator, Category, Project, Service } from "@prisma/client";
-import AbstractDAO from "./AbstractDAO";
+import Repository from "./Repository";
 
 interface ICreatableCategory {
   name: string;
@@ -20,7 +20,7 @@ export type CompleteCategoryType = Category & {
   createdBy: Administrator;
 };
 
-export default class CategoryModel extends AbstractDAO {
+export default class CategoryRepository extends Repository {
   constructor() {
     super();
   }

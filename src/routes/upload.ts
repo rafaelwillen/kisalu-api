@@ -1,4 +1,4 @@
-import UploadService from "@/services/Upload";
+import { UploadService } from "@/services";
 import { FastifyInstance } from "fastify";
 
 export default async function uploadRoutes(
