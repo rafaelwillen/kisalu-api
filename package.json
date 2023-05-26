@@ -19,6 +19,7 @@
     "dotenv": "^16.0.3",
     "fastify": "^4.17.0",
     "firebase": "^9.22.0",
+    "slugify": "^1.6.6",
     "underscore": "^1.13.6",
     "zod": "^3.21.4"
   },

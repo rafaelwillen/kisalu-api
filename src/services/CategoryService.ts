@@ -1,4 +1,5 @@
 import { CategoryRepository } from "@/repository";
+import { slugifyName } from "@/utils";
 import { noSymbolRegex } from "@/utils/regex";
 import { FastifyReply, FastifyRequest } from "fastify";
 import underscore from "underscore";
@@ -14,7 +15,8 @@ export default class CategoryService {
       const category = await this.categoryModel.create({
         ...categoryBody,
         // TODO: Add the actual admin id
-        administratorId: "66bd1956-b311-4415-8ce3-b1967b1c40fb",
+        administratorId: "5bd5cc4e-2155-4fe9-ae10-11cca098fbbf",
+        slug: slugifyName(categoryBody.name),
       });
       this.categoryModel.close();
       reply.code(201).send(underscore.omit(category, "administratorId"));
@@ -38,6 +40,7 @@ export default class CategoryService {
           cardImageUrl: category.cardImageUrl,
           numberOfProjects: category.projects.length,
           numberOfServices: category.services.length,
+          slug: category.slug,
         }))
       );
       this.categoryModel.close();
@@ -57,6 +60,7 @@ export default class CategoryService {
         })
         .parse(request.params);
       const category = await this.categoryModel.getSingle(categoryId);
+      this.categoryModel.close();
       if (!category) {
         reply.code(404).send({ message: "Category not found" });
         return;
@@ -69,8 +73,41 @@ export default class CategoryService {
         bannerImageUrl: category.bannerImageUrl,
         numberOfProjects: category.projects.length,
         numberOfServices: category.services.length,
+        slug: category.slug,
       });
+    } catch (error) {
       this.categoryModel.close();
+      if (error instanceof z.ZodError)
+        reply.code(400).send({ message: "Bad request", errors: error.errors });
+      console.error(error, "Category Service Error");
+      reply.code(500).send({ message: "Internal server error" });
+    }
+  }
+
+  async getCategoryBySlug(request: FastifyRequest, reply: FastifyReply) {
+    this.categoryModel = new CategoryRepository();
+    try {
+      const { slug } = z
+        .object({
+          slug: z.string().nonempty().min(3).regex(noSymbolRegex).max(255),
+        })
+        .parse(request.params);
+      const category = await this.categoryModel.getBySlug(slug);
+      this.categoryModel.close();
+      if (!category) {
+        reply.code(404).send({ message: "Category not found" });
+        return;
+      }
+      reply.send({
+        id: category.id,
+        name: category.name,
+        description: category.description,
+        cardImageUrl: category.cardImageUrl,
+        bannerImageUrl: category.bannerImageUrl,
+        numberOfProjects: category.projects.length,
+        numberOfServices: category.services.length,
+        slug: category.slug,
+      });
     } catch (error) {
       this.categoryModel.close();
       if (error instanceof z.ZodError)
