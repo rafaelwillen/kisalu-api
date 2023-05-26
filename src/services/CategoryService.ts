@@ -1,4 +1,4 @@
-import { CategoryRepository } from "@/repository";
+import { AdministratorRepository, CategoryRepository } from "@/repository";
 import { slugifyName } from "@/utils";
 import { noSymbolRegex } from "@/utils/regex";
 import { FastifyReply, FastifyRequest } from "fastify";
@@ -11,11 +11,15 @@ export default class CategoryService {
   async createCategory(request: FastifyRequest, reply: FastifyReply) {
     this.categoryModel = new CategoryRepository();
     try {
+      const adminRepository = new AdministratorRepository();
+      const admin = await adminRepository.getByUsername("rafaelpadre");
+      if (!admin) throw new Error("Administrator not found");
+      adminRepository.close();
       const categoryBody = parseBodyForCreateCategory(request);
       const category = await this.categoryModel.create({
         ...categoryBody,
         // TODO: Add the actual admin id
-        administratorId: "5bd5cc4e-2155-4fe9-ae10-11cca098fbbf",
+        administratorId: admin.id,
         slug: slugifyName(categoryBody.name),
       });
       this.categoryModel.close();

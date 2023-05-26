@@ -1,9 +1,27 @@
 import { Administrator } from "@prisma/client";
 import Repository from "./Repository";
 
+interface ICreatableAdministrator {
+  username: string;
+  email: string;
+  password: string;
+  name: string;
+}
+
 export default class AdministratorRepository extends Repository {
   constructor() {
     super();
+  }
+
+  async create(administrator: ICreatableAdministrator): Promise<Administrator> {
+    try {
+      const newAdministrator = await this.prisma.administrator.create({
+        data: administrator,
+      });
+      return newAdministrator;
+    } catch (error) {
+      throw new Error("Database error on create administrator");
+    }
   }
 
   async getByID(id: string): Promise<Administrator | null> {

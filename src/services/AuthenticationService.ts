@@ -70,7 +70,7 @@ export default class AuthenticationService {
           reply.code(401).send({ message: "Unauthorized" });
           return;
         }
-        const { password, loginToken, ...userWithoutSecrets } = user;
+        const { password, ...userWithoutSecrets } = user;
         reply.send({ ...userWithoutSecrets });
       } else {
         // TODO: Do something for user
