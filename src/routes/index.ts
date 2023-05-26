@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import adminRoutes from "./admin";
+import authenticationRoutes from "./auth";
 import uploadRoutes from "./upload";
 
 async function routes(
@@ -9,6 +10,8 @@ async function routes(
 ) {
   fastify.register(adminRoutes, { prefix: "/admin" });
   fastify.register(uploadRoutes, { prefix: "/upload" });
+  fastify.register(authenticationRoutes, { prefix: "/auth" });
+
   fastify.get("/", (_, reply) => {
     reply.send({
       message: "Server Online",

@@ -24,13 +24,13 @@ export default class AuthenticationService {
         reply.code(401).send({ message: "Invalid credentials" });
         return;
       }
+      this.administratorRepository.close();
 
       const token = await reply.jwtSign(
         {
           username: user.username,
-          id: user.id,
           email: user.email,
-          name: user.name,
+          role: "admin",
         },
         {
           sign: {
@@ -47,6 +47,39 @@ export default class AuthenticationService {
       reply.code(500).send({ message: "Internal server error" });
     }
   }
+
+  async verifyAdminToken(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const payload = await request.jwtVerify();
+      const parsedPayload = parseJWTPayloadType(payload);
+      if (parsedPayload.role !== "admin") throw new Error("Unauthorized");
+      reply.send({ message: "Authorized", payload: parsedPayload });
+    } catch (error) {
+      reply.code(401).send({ message: "Unauthorized" });
+    }
+  }
+
+  async getCurrentUser(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const payload = await request.jwtVerify();
+      const { email, role } = parseJWTPayloadType(payload);
+      if (role === "admin") {
+        this.administratorRepository = new AdministratorRepository();
+        const user = await this.administratorRepository.getByEmail(email);
+        this.administratorRepository.close();
+        if (!user) {
+          reply.code(401).send({ message: "Unauthorized" });
+          return;
+        }
+        const { password, loginToken, ...userWithoutSecrets } = user;
+        reply.send({ ...userWithoutSecrets });
+      } else {
+        // TODO: Do something for user
+      }
+    } catch (error) {
+      reply.code(401).send({ message: "Unauthorized" });
+    }
+  }
 }
 
 function parseAdminBodyForLogin(request: FastifyRequest) {
@@ -55,4 +88,15 @@ function parseAdminBodyForLogin(request: FastifyRequest) {
     password: z.string().nonempty(),
   });
   return schema.parse(request.body);
+}
+
+function parseJWTPayloadType(payload: any) {
+  const schema = z.object({
+    username: z.string().nonempty(),
+    email: z.string().nonempty().email(),
+    role: z.enum(["admin", "user"]),
+    exp: z.number().int().positive(),
+    iat: z.number().int().positive(),
+  });
+  return schema.parse(payload);
 }

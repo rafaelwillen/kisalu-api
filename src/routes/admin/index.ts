@@ -1,4 +1,3 @@
-import { AuthenticationService } from "@/services";
 import { FastifyInstance } from "fastify";
 import adminCategoriesRoutes from "./categories";
 
@@ -7,10 +6,9 @@ export default function adminRoutes(
   options: any,
   done: () => void
 ) {
-  const authenticationService = new AuthenticationService();
+  // TODO: Add route protection here
 
-  app.post("/login", authenticationService.adminLogin);
-  // Categories
+  // Categories routes
   app.register(adminCategoriesRoutes, { prefix: "/category" });
   done();
 }
