@@ -138,6 +138,7 @@ model Service {
 model Category {
   id              String               @id @default(uuid())
   name            String
+  slug           String               @unique
   description     String
   cardImageUrl    String
   bannerImageUrl  String
@@ -323,7 +324,6 @@ model Administrator {
   createdAt         DateTime   @default(now())
   lastLogin         DateTime   @default(now())
   username          String     @unique
-  loginToken        String?    @unique
   disputes          Dispute[]
   createdCategories Category[]
 

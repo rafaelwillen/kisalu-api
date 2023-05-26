@@ -90,10 +90,12 @@ CREATE TABLE "service" (
 CREATE TABLE "category" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "slug" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "cardImageUrl" TEXT NOT NULL,
     "bannerImageUrl" TEXT NOT NULL,
     "administratorId" TEXT NOT NULL,
+    "createddAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "category_pkey" PRIMARY KEY ("id")
 );
@@ -293,6 +295,9 @@ CREATE UNIQUE INDEX "review_activityId_key" ON "review"("activityId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "service_linkedActivityId_key" ON "service"("linkedActivityId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "category_slug_key" ON "category"("slug");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "project_linkedActivityId_key" ON "project"("linkedActivityId");

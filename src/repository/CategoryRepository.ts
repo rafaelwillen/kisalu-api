@@ -7,6 +7,7 @@ interface ICreatableCategory {
   cardImageUrl: string;
   bannerImageUrl: string;
   administratorId: string;
+  slug: string;
 }
 
 interface IEditableCategory
@@ -25,22 +26,10 @@ export default class CategoryRepository extends Repository {
     super();
   }
 
-  async create({
-    administratorId,
-    bannerImageUrl,
-    cardImageUrl,
-    description,
-    name,
-  }: ICreatableCategory): Promise<Category> {
+  async create(data: ICreatableCategory): Promise<Category> {
     try {
       const newCategory = await this.prisma.category.create({
-        data: {
-          administratorId,
-          bannerImageUrl,
-          cardImageUrl,
-          description,
-          name,
-        },
+        data,
       });
       return newCategory;
     } catch (error) {
@@ -76,6 +65,21 @@ export default class CategoryRepository extends Repository {
     }
   }
 
+  async getBySlug(slug: string): Promise<CompleteCategoryType | null> {
+    try {
+      const category = await this.prisma.category.findUnique({
+        where: {
+          slug,
+        },
+        include: { projects: {}, services: {}, createdBy: {} },
+      });
+      return category;
+    } catch (error) {
+      console.log(error);
+      throw new Error("Database error on get single category");
+    }
+  }
+
   async delete(id: string): Promise<void> {
     try {
       await this.prisma.category.delete({
@@ -95,6 +99,7 @@ export default class CategoryRepository extends Repository {
     description,
     name,
     id,
+    slug,
   }: IEditableCategory): Promise<Category> {
     try {
       const updatedCategory = await this.prisma.category.update({
@@ -106,6 +111,7 @@ export default class CategoryRepository extends Repository {
           cardImageUrl,
           description,
           name,
+          slug,
         },
       });
       return updatedCategory;
