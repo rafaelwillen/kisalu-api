@@ -1,3 +1,4 @@
+import { verifyJWT } from "@/configs/jwt";
 import { AdministratorRepository } from "@/repository";
 import { FastifyReply, FastifyRequest } from "fastify";
 import z from "zod";
@@ -50,10 +51,9 @@ export default class AuthenticationService {
 
   async verifyAdminToken(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const payload = await request.jwtVerify();
-      const parsedPayload = parseJWTPayloadType(payload);
-      if (parsedPayload.role !== "admin") throw new Error("Unauthorized");
-      reply.send({ message: "Authorized", payload: parsedPayload });
+      const payload = await verifyJWT(request);
+      if (payload.role !== "admin") throw new Error("Unauthorized");
+      reply.send({ message: "Authorized", payload: payload });
     } catch (error) {
       reply.code(401).send({ message: "Unauthorized" });
     }
@@ -61,8 +61,7 @@ export default class AuthenticationService {
 
   async getCurrentUser(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const payload = await request.jwtVerify();
-      const { email, role } = parseJWTPayloadType(payload);
+      const { email, role } = await verifyJWT(request);
       if (role === "admin") {
         this.administratorRepository = new AdministratorRepository();
         const user = await this.administratorRepository.getByEmail(email);
@@ -88,15 +87,4 @@ function parseAdminBodyForLogin(request: FastifyRequest) {
     password: z.string().nonempty(),
   });
   return schema.parse(request.body);
-}
-
-function parseJWTPayloadType(payload: any) {
-  const schema = z.object({
-    username: z.string().nonempty(),
-    email: z.string().nonempty().email(),
-    role: z.enum(["admin", "user"]),
-    exp: z.number().int().positive(),
-    iat: z.number().int().positive(),
-  });
-  return schema.parse(payload);
 }

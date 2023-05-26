@@ -7,6 +7,7 @@ export default function adminRoutes(
   done: () => void
 ) {
   // TODO: Add route protection here
+  // app.addHook("onRequest", useEnsureAdminIsAuthenticated);
 
   // Categories routes
   app.register(adminCategoriesRoutes, { prefix: "/category" });
