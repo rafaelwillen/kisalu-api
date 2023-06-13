@@ -1,0 +1,11 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "driver": "PostgreSQL",
+            "name": "Kisalu",
+            "connectString": "postgresql://rafaelwillen:googlegmai0@localhost:5433/kisalu?schema=public"
+        }
+    ]
+}
