@@ -9,9 +9,9 @@ export default function adminCategoriesRoutes(
   const categoryService = new CategoryService();
 
   app.post("/", categoryService.createCategory);
-  app.get("/", categoryService.getAllCategories);
-  app.get("/:id", categoryService.getCategoryById);
-  app.get("/slug/:slug", categoryService.getCategoryBySlug);
+  app.get("/", categoryService.getAllCategoriesAdminOnly);
+  app.get("/:id", categoryService.getCategoryByID);
   app.delete("/:id", categoryService.deleteCategory);
+  app.put("/:id", categoryService.updateCategory);
   done();
 }

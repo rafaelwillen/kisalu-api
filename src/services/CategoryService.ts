@@ -1,154 +1,123 @@
+import { HTTP_STATUS_CODE } from "@/constants";
 import { AdministratorRepository, CategoryRepository } from "@/repository";
 import { slugifyName } from "@/utils";
-import { noSymbolRegex } from "@/utils/regex";
 import { FastifyReply, FastifyRequest } from "fastify";
-import underscore from "underscore";
+import { omit } from "underscore";
 import { z } from "zod";
+import { handleServiceError } from ".";
 
 export default class CategoryService {
-  private categoryModel: CategoryRepository | undefined;
+  private categoryRepository: CategoryRepository | undefined;
 
   async createCategory(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryModel = new CategoryRepository();
+    this.categoryRepository = new CategoryRepository();
+    const administratorRepository = new AdministratorRepository();
     try {
-      const adminRepository = new AdministratorRepository();
-      const admin = await adminRepository.getByUsername("rafaelpadre");
+      const admin = await administratorRepository.getByEmail(
+        "rafaelpadre@gmail.com"
+      );
+      administratorRepository.close();
       if (!admin) throw new Error("Administrator not found");
-      adminRepository.close();
-      const categoryBody = parseBodyForCreateCategory(request);
-      const category = await this.categoryModel.create({
-        ...categoryBody,
-        // TODO: Add the actual admin id
-        administratorId: admin.id,
-        slug: slugifyName(categoryBody.name),
+      const parsedCategoryBody = parseBodyForCreateCategory(request);
+      const createdCategory = await this.categoryRepository.create({
+        ...parsedCategoryBody,
+        creatorAdminId: admin.id,
+        slug: slugifyName(parsedCategoryBody.name),
       });
-      this.categoryModel.close();
-      reply.code(201).send(underscore.omit(category, "administratorId"));
+      this.categoryRepository.close();
+      return reply
+        .code(HTTP_STATUS_CODE.CREATED)
+        .send(omit(createdCategory, "creatorAdminId"));
     } catch (error) {
-      this.categoryModel.close();
-      if (error instanceof z.ZodError)
-        reply.code(400).send({ message: "Bad request", errors: error.errors });
-      console.error(error, "Category Service Error");
-      reply.code(500).send({ message: "Internal server error" });
+      handleServiceError(
+        error,
+        [this.categoryRepository, administratorRepository],
+        reply
+      );
     }
   }
 
   async getAllCategories(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryModel = new CategoryRepository();
+    this.categoryRepository = new CategoryRepository();
     try {
-      const categories = await this.categoryModel.getAll();
-      reply.send(
-        categories.map((category) => ({
-          id: category.id,
-          name: category.name,
-          cardImageUrl: category.cardImageUrl,
-          numberOfProjects: category.projects.length,
-          numberOfServices: category.services.length,
-          slug: category.slug,
-        }))
+      const categories = await this.categoryRepository.getAll();
+      this.categoryRepository.close();
+      const parsedCategories = categories.map(
+        ({ services, projects, ...restOfCategory }) => ({
+          totalServices: services.length,
+          totalProjects: projects.length,
+          availableServices: services.filter(
+            (service) => service.state === "Available"
+          ).length,
+          availableProjects: projects.filter(
+            (project) => project.state === "Available"
+          ).length,
+          ...omit(
+            restOfCategory,
+            "id",
+            "admin",
+            "creatorAdminId",
+            "bannerImageURL"
+          ),
+        })
       );
-      this.categoryModel.close();
+      return reply.send(parsedCategories);
     } catch (error) {
-      this.categoryModel.close();
-      console.error(error, "Category Service Error");
-      reply.code(500).send({ message: "Internal server error" });
+      handleServiceError(error, [this.categoryRepository], reply);
     }
   }
 
-  async getCategoryById(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryModel = new CategoryRepository();
+  async getAllCategoriesAdminOnly(
+    request: FastifyRequest,
+    reply: FastifyReply
+  ) {
+    this.categoryRepository = new CategoryRepository();
     try {
-      const { id: categoryId } = z
-        .object({
-          id: z.string().nonempty().uuid(),
+      const categories = await this.categoryRepository.getAll();
+      this.categoryRepository.close();
+      const parsedCategories = categories.map(
+        ({ services, projects, ...restOfCategory }) => ({
+          totalServices: services.length,
+          totalProjects: projects.length,
+          availableServices: services.filter(
+            (service) => service.state === "Available"
+          ).length,
+          availableProjects: projects.filter(
+            (project) => project.state === "Available"
+          ).length,
+          createdBy: omit(restOfCategory.admin, "biography", "birthDate"),
+          ...omit(restOfCategory, "admin", "creatorAdminId", "bannerImageURL"),
         })
-        .parse(request.params);
-      const category = await this.categoryModel.getSingle(categoryId);
-      this.categoryModel.close();
-      if (!category) {
-        reply.code(404).send({ message: "Category not found" });
-        return;
-      }
-      reply.send({
-        id: category.id,
-        name: category.name,
-        description: category.description,
-        cardImageUrl: category.cardImageUrl,
-        bannerImageUrl: category.bannerImageUrl,
-        numberOfProjects: category.projects.length,
-        numberOfServices: category.services.length,
-        slug: category.slug,
-      });
+      );
+      return reply.send(parsedCategories);
     } catch (error) {
-      this.categoryModel.close();
-      if (error instanceof z.ZodError)
-        reply.code(400).send({ message: "Bad request", errors: error.errors });
-      console.error(error, "Category Service Error");
-      reply.code(500).send({ message: "Internal server error" });
+      handleServiceError(error, [this.categoryRepository], reply);
     }
+  }
+
+  async getCategoryByID(request: FastifyRequest, reply: FastifyReply) {
+    throw new Error("Not implemented");
   }
 
   async getCategoryBySlug(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryModel = new CategoryRepository();
-    try {
-      const { slug } = z
-        .object({
-          slug: z.string().nonempty().min(3).regex(noSymbolRegex).max(255),
-        })
-        .parse(request.params);
-      const category = await this.categoryModel.getBySlug(slug);
-      this.categoryModel.close();
-      if (!category) {
-        reply.code(404).send({ message: "Category not found" });
-        return;
-      }
-      reply.send({
-        id: category.id,
-        name: category.name,
-        description: category.description,
-        cardImageUrl: category.cardImageUrl,
-        bannerImageUrl: category.bannerImageUrl,
-        numberOfProjects: category.projects.length,
-        numberOfServices: category.services.length,
-        slug: category.slug,
-      });
-    } catch (error) {
-      this.categoryModel.close();
-      if (error instanceof z.ZodError)
-        reply.code(400).send({ message: "Bad request", errors: error.errors });
-      console.error(error, "Category Service Error");
-      reply.code(500).send({ message: "Internal server error" });
-    }
+    throw new Error("Not implemented");
   }
 
   async deleteCategory(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryModel = new CategoryRepository();
-    try {
-      const { id: categoryId } = z
-        .object({
-          id: z.string().nonempty().uuid(),
-        })
-        .parse(request.params);
-      await this.categoryModel.delete(categoryId);
+    throw new Error("Not implemented");
+  }
 
-      reply.send({ message: "Category deleted" });
-      this.categoryModel.close();
-    } catch (error) {
-      this.categoryModel.close();
-      if (error instanceof z.ZodError)
-        reply.code(400).send({ message: "Bad request", errors: error.errors });
-      console.error(error, "Category Service Error");
-      reply.code(500).send({ message: "Internal server error" });
-    }
+  async updateCategory(request: FastifyRequest, reply: FastifyReply) {
+    throw new Error("Not implemented");
   }
 }
 
 function parseBodyForCreateCategory(request: FastifyRequest) {
   const schema = z.object({
-    name: z.string().nonempty().min(3).regex(noSymbolRegex).max(255),
-    description: z.string().nonempty().min(3).regex(noSymbolRegex).max(255),
-    cardImageUrl: z.string().nonempty().min(3).url(),
-    bannerImageUrl: z.string().nonempty().min(3).url(),
+    name: z.string().nonempty().min(3).max(255),
+    mainImageURL: z.string().url(),
+    bannerImageURL: z.string().url(),
+    description: z.string().nonempty().min(3).max(255),
   });
   return schema.parse(request.body);
 }
