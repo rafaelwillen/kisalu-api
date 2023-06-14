@@ -1,4 +1,4 @@
-import { Gender, User } from "@prisma/client";
+import { Auth, Category, Dispute, Gender, User } from "@prisma/client";
 import Repository from "./Repository";
 
 interface ICreatableAdministrator {
@@ -11,6 +11,15 @@ interface ICreatableAdministrator {
     password: string;
   };
 }
+
+export type CompleteAdministratorType = Omit<
+  User,
+  "biography" | "birthDate"
+> & {
+  auth: Pick<Auth, "email" | "role">;
+  disputes: Dispute[];
+  createdCategories: Category[];
+};
 
 export default class AdministratorRepository extends Repository {
   constructor() {
@@ -67,6 +76,26 @@ export default class AdministratorRepository extends Repository {
       if (!userAuth) return null;
       if (userAuth?.role !== "Administrator") return null;
       return userAuth.User;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getAll(): Promise<CompleteAdministratorType[]> {
+    try {
+      const administrators = await this.prisma.user.findMany({
+        where: {
+          auth: {
+            role: "Administrator",
+          },
+        },
+        include: {
+          auth: true,
+          disputes: true,
+          createdCategories: true,
+        },
+      });
+      return administrators;
     } catch (error) {
       throw error;
     }
