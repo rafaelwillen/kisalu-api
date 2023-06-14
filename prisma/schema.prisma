@@ -50,8 +50,8 @@ model User {
   firstName          String
   lastName           String
   avatarImageURL     String
-  biography          String
-  birthDate          DateTime
+  biography          String?
+  birthDate          DateTime?
   gender             Gender
   auth               Auth             @relation(fields: [loginId], references: [id])
   loginId            String           @unique
@@ -68,9 +68,9 @@ model User {
 model Auth {
   id          String   @id @default(uuid())
   email       String   @unique
-  phoneNumber String   @unique
+  phoneNumber String?   @unique
   password    String
-  isActive    Boolean
+  isActive    Boolean?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now())
   role        Role
