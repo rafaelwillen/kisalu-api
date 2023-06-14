@@ -68,7 +68,7 @@ model User {
 model Auth {
   id          String   @id @default(uuid())
   email       String   @unique
-  phoneNumber String?   @unique
+  phoneNumber String?  @unique
   password    String
   isActive    Boolean?
   createdAt   DateTime @default(now())
@@ -202,14 +202,15 @@ model Attachment {
 
 model Category {
   id             String   @id @default(uuid())
-  name           String
+  name           String   @unique
   mainImageURL   String
   bannerImageURL String
   description    String
   createdAt      DateTime @default(now())
+  slug           String   @unique
 
-  admin          User?     @relation(fields: [creatorAdminId], references: [id])
-  creatorAdminId String?
+  admin          User     @relation(fields: [creatorAdminId], references: [id])
+  creatorAdminId String
   services       Service[]
   projects       Project[]
 }
