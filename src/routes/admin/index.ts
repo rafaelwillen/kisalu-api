@@ -13,6 +13,7 @@ export default function adminRoutes(
   const adminService = new AdministratorService();
 
   app.post("/", adminService.createAdministrator);
+  app.get("/", adminService.getAllAdministrators);
 
   // Categories routes
   app.register(adminCategoriesRoutes, { prefix: "/category" });
