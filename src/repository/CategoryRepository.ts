@@ -1,24 +1,12 @@
-import { Administrator, Category, Project, Service } from "@prisma/client";
+import { Category, Project, Service, User } from "@prisma/client";
 import Repository from "./Repository";
 
-interface ICreatableCategory {
-  name: string;
-  description: string;
-  cardImageUrl: string;
-  bannerImageUrl: string;
-  administratorId: string;
-  slug: string;
-}
-
-interface IEditableCategory
-  extends Omit<ICreatableCategory, "administratorId"> {
-  id: string;
-}
+type CreatableCategory = Omit<Category, "id" | "createdAt">;
 
 export type CompleteCategoryType = Category & {
   services: Service[];
   projects: Project[];
-  createdBy: Administrator;
+  admin: User | null;
 };
 
 export default class CategoryRepository extends Repository {
@@ -26,98 +14,79 @@ export default class CategoryRepository extends Repository {
     super();
   }
 
-  async create(data: ICreatableCategory): Promise<Category> {
+  async create(data: CreatableCategory): Promise<Category> {
     try {
       const newCategory = await this.prisma.category.create({
         data,
       });
+      this.close();
       return newCategory;
     } catch (error) {
-      console.error(error);
-      throw new Error("Database error on create category");
+      this.close();
+      throw error;
     }
   }
 
   async getAll(): Promise<CompleteCategoryType[]> {
     try {
       const categories = await this.prisma.category.findMany({
-        include: { projects: {}, services: {}, createdBy: {} },
+        include: {
+          services: true,
+          projects: true,
+          admin: true,
+        },
       });
       return categories;
     } catch (error) {
       console.log(error);
-      throw new Error("Database error on get all categories");
+      throw error;
     }
   }
 
   async getSingle(id: string): Promise<CompleteCategoryType | null> {
     try {
       const category = await this.prisma.category.findUnique({
-        where: {
-          id,
+        where: { id },
+        include: {
+          services: true,
+          projects: true,
+          admin: true,
         },
-        include: { projects: {}, services: {}, createdBy: {} },
       });
       return category;
     } catch (error) {
       console.log(error);
-      throw new Error("Database error on get single category");
+      throw error;
     }
   }
 
   async getBySlug(slug: string): Promise<CompleteCategoryType | null> {
     try {
       const category = await this.prisma.category.findUnique({
-        where: {
-          slug,
+        where: { slug },
+        include: {
+          services: true,
+          projects: true,
+          admin: true,
         },
-        include: { projects: {}, services: {}, createdBy: {} },
       });
       return category;
     } catch (error) {
       console.log(error);
-      throw new Error("Database error on get single category");
+      throw error;
     }
   }
 
   async delete(id: string): Promise<void> {
     try {
       await this.prisma.category.delete({
-        where: {
-          id,
-        },
+        where: { id },
       });
     } catch (error) {
       console.log(error);
-      throw new Error("Database error on delete category");
+      throw error;
     }
   }
 
-  async update({
-    bannerImageUrl,
-    cardImageUrl,
-    description,
-    name,
-    id,
-    slug,
-  }: IEditableCategory): Promise<Category> {
-    try {
-      const updatedCategory = await this.prisma.category.update({
-        where: {
-          id,
-        },
-        data: {
-          bannerImageUrl,
-          cardImageUrl,
-          description,
-          name,
-          slug,
-        },
-      });
-      return updatedCategory;
-    } catch (error) {
-      console.log(error);
-      throw new Error("Database error on update category");
-    }
-  }
+  // TODO: Implement the update method
 }

@@ -8,7 +8,6 @@ interface ICreatableAdministrator {
   gender: Gender;
   auth: {
     email: string;
-    username: string;
     password: string;
   };
 }
@@ -31,10 +30,8 @@ export default class AdministratorRepository extends Repository {
           },
         },
       });
-      this.close();
       return newAdministrator;
     } catch (error) {
-      this.close();
       throw error;
     }
   }
@@ -49,12 +46,10 @@ export default class AdministratorRepository extends Repository {
           auth: true,
         },
       });
-      this.close();
       if (!user) return null;
       if (user?.auth.role !== "Administrator") return null;
       return user;
     } catch (error) {
-      this.close();
       throw error;
     }
   }
@@ -69,12 +64,10 @@ export default class AdministratorRepository extends Repository {
           User: true,
         },
       });
-      this.close();
       if (!userAuth) return null;
       if (userAuth?.role !== "Administrator") return null;
       return userAuth.User;
     } catch (error) {
-      this.close();
       throw error;
     }
   }
