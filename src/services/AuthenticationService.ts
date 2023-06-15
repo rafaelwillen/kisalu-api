@@ -1,90 +1,83 @@
-import { verifyJWT } from "@/configs/jwt";
-import { AdministratorRepository } from "@/repository";
+import { signJWT, verifyJWT } from "@/configs/jwt";
+import { HTTP_STATUS_CODE } from "@/constants";
+import { AuthRepository } from "@/repository/AuthRepository";
+import HTTPError from "@/utils/error/HTTPError";
 import { FastifyReply, FastifyRequest } from "fastify";
+import { omit } from "underscore";
 import z from "zod";
+import { handleServiceError } from ".";
 
 export default class AuthenticationService {
-  private administratorRepository: AdministratorRepository | undefined;
+  private authenticationRepository: AuthRepository | undefined;
 
-  async adminLogin(request: FastifyRequest, reply: FastifyReply) {
-    this.administratorRepository = new AdministratorRepository();
+  async authenticateAdministrator(
+    request: FastifyRequest,
+    reply: FastifyReply
+  ) {
+    this.authenticationRepository = new AuthRepository();
     try {
-      const loginBody = parseAdminBodyForLogin(request);
-      const user = await this.administratorRepository.getByUsername(
-        loginBody.username
+      this.authenticationRepository = new AuthRepository();
+      const parsedUserBody = parseBodyForAuthentication(request);
+      const userAuthData = await this.authenticationRepository.getByEmail(
+        parsedUserBody.email
       );
-      if (!user) {
-        this.administratorRepository.close();
-        reply.code(401).send({ message: "Invalid credentials" });
-        return;
-      }
-
+      this.authenticationRepository.close();
       // TODO: Add password hashing
-      if (user.password !== loginBody.password) {
-        this.administratorRepository.close();
-        reply.code(401).send({ message: "Invalid credentials" });
-        return;
+      if (
+        !userAuthData ||
+        userAuthData.role !== "Administrator" ||
+        userAuthData.password !== parsedUserBody.password
+      ) {
+        throw new HTTPError(
+          HTTP_STATUS_CODE.UNAUTHORIZED,
+          "Invalid credentials"
+        );
       }
-      this.administratorRepository.close();
-
-      const token = await reply.jwtSign(
-        {
-          username: user.username,
-          email: user.email,
-          role: "admin",
-        },
-        {
-          sign: {
-            expiresIn: "1h",
-          },
-        }
-      );
+      const token = await signJWT(reply, {
+        email: userAuthData.email,
+        role: userAuthData.role,
+      });
       reply.send({ token });
     } catch (error) {
-      this.administratorRepository.close();
-      if (error instanceof z.ZodError)
-        reply.code(400).send({ message: "Bad request", errors: error.errors });
-      console.error(error, "Authentication Service Error");
-      reply.code(500).send({ message: "Internal server error" });
+      handleServiceError(error, [this.authenticationRepository], reply);
     }
   }
 
-  async verifyAdminToken(request: FastifyRequest, reply: FastifyReply) {
+  async getCurrentAuthenticatedUser(
+    request: FastifyRequest,
+    reply: FastifyReply
+  ) {
+    this.authenticationRepository = new AuthRepository();
     try {
-      const payload = await verifyJWT(request);
-      if (payload.role !== "admin") throw new Error("Unauthorized");
-      reply.send({ message: "Authorized", payload: payload });
-    } catch (error) {
-      reply.code(401).send({ message: "Unauthorized" });
-    }
-  }
+      const { email } = await verifyJWT(request);
+      const authData = await this.authenticationRepository.getByEmail(email);
+      if (!authData)
+        throw new HTTPError(
+          HTTP_STATUS_CODE.UNAUTHORIZED,
+          "Invalid credentials"
+        );
+      this.authenticationRepository.close();
+      const { User, isActive, phoneNumber, role, updatedAt, createdAt } =
+        authData;
 
-  async getCurrentUser(request: FastifyRequest, reply: FastifyReply) {
-    try {
-      const { email, role } = await verifyJWT(request);
-      if (role === "admin") {
-        this.administratorRepository = new AdministratorRepository();
-        const user = await this.administratorRepository.getByEmail(email);
-        this.administratorRepository.close();
-        if (!user) {
-          reply.code(401).send({ message: "Unauthorized" });
-          return;
-        }
-        const { password, ...userWithoutSecrets } = user;
-        reply.send({ ...userWithoutSecrets });
-      } else {
-        // TODO: Do something for user
-      }
+      reply.send({
+        isActive: isActive ?? true,
+        phoneNumber,
+        role,
+        updatedAt,
+        createdAt,
+        ...omit(User, "id", "loginId"),
+      });
     } catch (error) {
-      reply.code(401).send({ message: "Unauthorized" });
+      handleServiceError(error, [this.authenticationRepository], reply);
     }
   }
 }
 
-function parseAdminBodyForLogin(request: FastifyRequest) {
+function parseBodyForAuthentication(request: FastifyRequest) {
   const schema = z.object({
-    username: z.string().nonempty(),
-    password: z.string().nonempty(),
+    email: z.string().email(),
+    password: z.string().min(8),
   });
   return schema.parse(request.body);
 }

@@ -8,9 +8,8 @@ export default async function authenticationRoutes(
 ) {
   const authenticationService = new AuthenticationService();
 
-  app.get("/me", authenticationService.getCurrentUser);
-  app.post("/login/admin", authenticationService.adminLogin);
-  app.post("/login/admin/verify", authenticationService.verifyAdminToken);
+  app.get("/me", authenticationService.getCurrentAuthenticatedUser);
+  app.post("/login/admin", authenticationService.authenticateAdministrator);
 
   done();
 }
