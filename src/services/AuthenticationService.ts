@@ -37,7 +37,16 @@ export default class AuthenticationService {
         email: userAuthData.email,
         role: userAuthData.role,
       });
-      reply.send({ token });
+      const { email, role, createdAt, User } = userAuthData;
+      reply.send({
+        token,
+        user: {
+          email: email,
+          role,
+          createdAt,
+          ...omit(User, "id", "loginId", "biography", "birthDate", "gender"),
+        },
+      });
     } catch (error) {
       handleServiceError(error, [this.authenticationRepository], reply);
     }
@@ -66,6 +75,7 @@ export default class AuthenticationService {
         role,
         updatedAt,
         createdAt,
+        email,
         ...omit(User, "id", "loginId"),
       });
     } catch (error) {

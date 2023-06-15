@@ -13,7 +13,8 @@ async function main() {
       role: "Administrator",
       User: {
         create: {
-          avatarImageURL: "https://robohash.org/admin.png",
+          avatarImageURL:
+            "https://firebasestorage.googleapis.com/v0/b/kisalu-server.appspot.com/o/images%2Favatar%2Fadmin.png?alt=media&token=b7e1dfba-4012-484e-a2e8-36487f987412",
           firstName: "Rafael",
           lastName: "Padre",
           gender: "Male",
