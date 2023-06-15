@@ -22,8 +22,8 @@ CREATE TABLE "User" (
     "firstName" TEXT NOT NULL,
     "lastName" TEXT NOT NULL,
     "avatarImageURL" TEXT NOT NULL,
-    "biography" TEXT NOT NULL,
-    "birthDate" TIMESTAMP(3) NOT NULL,
+    "biography" TEXT,
+    "birthDate" TIMESTAMP(3),
     "gender" "Gender" NOT NULL,
     "loginId" TEXT NOT NULL,
 
@@ -34,9 +34,9 @@ CREATE TABLE "User" (
 CREATE TABLE "Login" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "phoneNumber" TEXT NOT NULL,
+    "phoneNumber" TEXT,
     "password" TEXT NOT NULL,
-    "isActive" BOOLEAN NOT NULL,
+    "isActive" BOOLEAN,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "role" "Role" NOT NULL,
@@ -181,7 +181,8 @@ CREATE TABLE "Category" (
     "bannerImageURL" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "creatorAdminId" TEXT,
+    "slug" TEXT NOT NULL,
+    "creatorAdminId" TEXT NOT NULL,
 
     CONSTRAINT "Category_pkey" PRIMARY KEY ("id")
 );
@@ -221,6 +222,12 @@ CREATE UNIQUE INDEX "Address_activityId_key" ON "Address"("activityId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Dispute_activityId_key" ON "Dispute"("activityId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Category_slug_key" ON "Category"("slug");
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_loginId_fkey" FOREIGN KEY ("loginId") REFERENCES "Login"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -271,7 +278,7 @@ ALTER TABLE "Dispute" ADD CONSTRAINT "Dispute_activityId_fkey" FOREIGN KEY ("act
 ALTER TABLE "Attachment" ADD CONSTRAINT "Attachment_disputeId_fkey" FOREIGN KEY ("disputeId") REFERENCES "Dispute"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Category" ADD CONSTRAINT "Category_creatorAdminId_fkey" FOREIGN KEY ("creatorAdminId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Category" ADD CONSTRAINT "Category_creatorAdminId_fkey" FOREIGN KEY ("creatorAdminId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Project" ADD CONSTRAINT "Project_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE SET NULL ON UPDATE CASCADE;

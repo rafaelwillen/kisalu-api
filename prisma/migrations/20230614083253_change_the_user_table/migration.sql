@@ -1,7 +1,0 @@
--- AlterTable
-ALTER TABLE "Login" ALTER COLUMN "phoneNumber" DROP NOT NULL,
-ALTER COLUMN "isActive" DROP NOT NULL;
-
--- AlterTable
-ALTER TABLE "User" ALTER COLUMN "biography" DROP NOT NULL,
-ALTER COLUMN "birthDate" DROP NOT NULL;
