@@ -4,11 +4,6 @@ import HTTPError from "@/utils/error/HTTPError";
 import { FastifyReply } from "fastify";
 import { ZodError } from "zod";
 
-export { default as AdministratorService } from "./AdministratorService";
-export { default as AuthenticationService } from "./AuthenticationService";
-export { default as CategoryService } from "./CategoryService";
-export { default as UploadService } from "./UploadService";
-
 export function handleServiceError(
   error: unknown,
   repositories: Repository[],

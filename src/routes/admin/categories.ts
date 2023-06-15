@@ -1,4 +1,4 @@
-import { CategoryService } from "@/services";
+import CategoryService from "@/services/CategoryService";
 import { FastifyInstance } from "fastify";
 
 export default function adminCategoriesRoutes(

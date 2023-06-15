@@ -1,4 +1,4 @@
-import { AuthenticationService } from "@/services";
+import AuthenticationService from "@/services/AuthenticationService";
 import { FastifyInstance } from "fastify";
 
 export default async function authenticationRoutes(
