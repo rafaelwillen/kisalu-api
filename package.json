@@ -12,6 +12,7 @@
     "migrate:prod": "prisma migrate deploy"
   },
   "dependencies": {
+    "@fastify/cookie": "^8.3.0",
     "@fastify/cors": "^8.2.1",
     "@fastify/jwt": "^7.0.0",
     "@fastify/multipart": "^7.6.0",
@@ -33,6 +34,6 @@
     "typescript": "^5.0.4"
   },
   "prisma": {
-    "seed":"tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts"
   }
 }
