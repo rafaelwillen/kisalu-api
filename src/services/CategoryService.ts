@@ -13,9 +13,8 @@ export default class CategoryService {
     this.categoryRepository = new CategoryRepository();
     const administratorRepository = new AdministratorRepository();
     try {
-      const admin = await administratorRepository.getByEmail(
-        "rafaelpadre@gmail.com"
-      );
+      const { email } = request.user;
+      const admin = await administratorRepository.getByEmail(email);
       administratorRepository.close();
       if (!admin) throw new Error("Administrator not found");
       const parsedCategoryBody = parseBodyForCreateCategory(request);

@@ -1,3 +1,4 @@
+import { verifyJWT } from "@/configs/jwt";
 import CategoryService from "@/services/CategoryService";
 import { FastifyInstance } from "fastify";
 
@@ -7,6 +8,10 @@ export default function adminCategoriesRoutes(
   done: () => void
 ) {
   const categoryService = new CategoryService();
+
+  app.addHook("onRequest", async (request, reply) => {
+    await verifyJWT(request);
+  });
 
   app.post("/", categoryService.createCategory);
   app.get("/", categoryService.getAllCategoriesAdminOnly);
