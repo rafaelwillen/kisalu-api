@@ -9,7 +9,7 @@
     "start": "node dist/server.js",
     "prisma:studio": "prisma studio",
     "migrate:dev": "prisma migrate dev",
-    "migrate:prod": "prisma generate"
+    "migrate:prod": "prisma migrate deploy && prisma generate"
   },
   "dependencies": {
     "@fastify/cookie": "^8.3.0",
