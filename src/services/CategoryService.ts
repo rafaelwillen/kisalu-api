@@ -127,7 +127,7 @@ export default class CategoryService {
     this.categoryRepository = new CategoryRepository();
     try {
       const { id } = parseCategoryByIdParams(request);
-       await this.categoryRepository.delete(id);
+      await this.categoryRepository.delete(id);
       this.categoryRepository.close();
       return reply.send();
     } catch (error) {
@@ -136,7 +136,19 @@ export default class CategoryService {
   }
 
   async updateCategory(request: FastifyRequest, reply: FastifyReply) {
-    throw new Error("Not implemented");
+    this.categoryRepository = new CategoryRepository();
+    try {
+      const { id } = parseCategoryByIdParams(request);
+      const parsedCategoryBody = parseBodyForCreateCategory(request);
+      const updatedCategory = await this.categoryRepository.update(id, {
+        ...parsedCategoryBody,
+        slug: slugifyName(parsedCategoryBody.name),
+      });
+      this.categoryRepository.close();
+      return reply.send(updatedCategory);
+    } catch (error) {
+      handleServiceError(error, [this.categoryRepository], reply);
+    }
   }
 }
 

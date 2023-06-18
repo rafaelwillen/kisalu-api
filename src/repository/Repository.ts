@@ -5,7 +5,7 @@ export default abstract class Repository {
 
   constructor() {
     this.prisma = new PrismaClient({
-      log: ["query", "info", "warn"],
+      log: ["warn"],
     });
   }
 
