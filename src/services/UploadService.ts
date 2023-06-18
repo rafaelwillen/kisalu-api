@@ -3,7 +3,6 @@ import { HTTP_STATUS_CODE } from "@/constants";
 import HTTPError from "@/utils/error/HTTPError";
 import { imageMimetypeRegex } from "@/utils/regex";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { FirebaseError } from "firebase/app";
 import {
   deleteObject,
   getDownloadURL,
@@ -13,6 +12,7 @@ import {
 import { randomUUID } from "node:crypto";
 import { extname } from "node:path";
 import z from "zod";
+import { handleUploadError } from ".";
 
 export default class UploadService {
   async uploadCategoryImage(request: FastifyRequest, reply: FastifyReply) {
@@ -34,20 +34,7 @@ export default class UploadService {
         url,
       });
     } catch (error) {
-      if (error instanceof FirebaseError) {
-        if (error.code === "storage/unauthorized")
-          throw new HTTPError(
-            HTTP_STATUS_CODE.UNAUTHORIZED,
-            "Unauthorized",
-            error
-          );
-        reply
-          .code(HTTP_STATUS_CODE.INTERNAL_SERVER_ERROR)
-          .send({ message: error.message, code: error.code });
-      } else
-        reply
-          .code(HTTP_STATUS_CODE.INTERNAL_SERVER_ERROR)
-          .send({ message: "Internal server error" });
+      handleUploadError(error, reply);
     }
   }
 
@@ -62,30 +49,7 @@ export default class UploadService {
       await deleteFile(ref);
       reply.send();
     } catch (error) {
-      console.log(error);
-
-      if (error instanceof FirebaseError) {
-        if (error.code === "storage/unauthorized")
-          throw new HTTPError(
-            HTTP_STATUS_CODE.UNAUTHORIZED,
-            "Unauthorized",
-            error
-          );
-        else if (error.code === "storage/object-not-found")
-          throw new HTTPError(
-            HTTP_STATUS_CODE.NOT_FOUND,
-            "File not found",
-            error
-          );
-        reply
-          .code(HTTP_STATUS_CODE.INTERNAL_SERVER_ERROR)
-          .send({ message: error.message, code: error.code });
-      } else if (error instanceof HTTPError) {
-        throw error;
-      } else
-        reply
-          .code(HTTP_STATUS_CODE.INTERNAL_SERVER_ERROR)
-          .send({ message: "Internal server error" });
+      handleUploadError(error, reply);
     }
   }
 }
