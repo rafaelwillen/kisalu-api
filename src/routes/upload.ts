@@ -7,7 +7,8 @@ export default async function uploadRoutes(
   done: () => void
 ) {
   const uploadService = new UploadService();
-  app.post("/category", uploadService.uploadCategoryBanner);
+  app.post("/category", uploadService.uploadCategoryImage);
+  app.delete("/category", uploadService.deleteCategoryImage);
 
   done();
 }
