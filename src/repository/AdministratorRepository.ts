@@ -27,77 +27,61 @@ export default class AdministratorRepository extends Repository {
   }
 
   async create(administrator: ICreatableAdministrator): Promise<User> {
-    try {
-      const newAdministrator = await this.prisma.user.create({
-        data: {
-          ...administrator,
-          auth: {
-            create: {
-              ...administrator.auth,
-              role: "Administrator",
-            },
-          },
-        },
-      });
-      return newAdministrator;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async getByID(id: string): Promise<User | null> {
-    try {
-      const user = await this.prisma.user.findUnique({
-        where: {
-          id,
-        },
-        include: {
-          auth: true,
-        },
-      });
-      if (!user) return null;
-      if (user?.auth.role !== "Administrator") return null;
-      return user;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async getByEmail(email: string): Promise<User | null> {
-    try {
-      const userAuth = await this.prisma.auth.findUnique({
-        where: {
-          email,
-        },
-        include: {
-          User: true,
-        },
-      });
-      if (!userAuth) return null;
-      if (userAuth?.role !== "Administrator") return null;
-      return userAuth.User;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async getAll(): Promise<CompleteAdministratorType[]> {
-    try {
-      const administrators = await this.prisma.user.findMany({
-        where: {
-          auth: {
+    const newAdministrator = await this.prisma.user.create({
+      data: {
+        ...administrator,
+        auth: {
+          create: {
+            ...administrator.auth,
             role: "Administrator",
           },
         },
-        include: {
-          auth: true,
-          disputes: true,
-          createdCategories: true,
+      },
+    });
+    return newAdministrator;
+  }
+
+  async getByID(id: string): Promise<User | null> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        auth: true,
+      },
+    });
+    if (!user) return null;
+    if (user?.auth.role !== "Administrator") return null;
+    return user;
+  }
+
+  async getByEmail(email: string): Promise<User | null> {
+    const userAuth = await this.prisma.auth.findUnique({
+      where: {
+        email,
+      },
+      include: {
+        User: true,
+      },
+    });
+    if (!userAuth) return null;
+    if (userAuth?.role !== "Administrator") return null;
+    return userAuth.User;
+  }
+
+  async getAll(): Promise<CompleteAdministratorType[]> {
+    const administrators = await this.prisma.user.findMany({
+      where: {
+        auth: {
+          role: "Administrator",
         },
-      });
-      return administrators;
-    } catch (error) {
-      throw error;
-    }
+      },
+      include: {
+        auth: true,
+        disputes: true,
+        createdCategories: true,
+      },
+    });
+    return administrators;
   }
 }
