@@ -1,5 +1,6 @@
 import { signJWT, verifyJWT } from "@/configs/jwt";
 import { HTTP_STATUS_CODE } from "@/constants";
+import { comparePasswords } from "@/lib/passwordHashing";
 import { AuthRepository } from "@/repository/AuthRepository";
 import HTTPError from "@/utils/error/HTTPError";
 import { FastifyReply, FastifyRequest } from "fastify";
@@ -22,11 +23,13 @@ export default class AuthenticationService {
         parsedUserBody.email
       );
       this.authenticationRepository.close();
-      // TODO: Add password hashing
       if (
         !userAuthData ||
         userAuthData.role !== "Administrator" ||
-        userAuthData.password !== parsedUserBody.password
+        !(await comparePasswords(
+          parsedUserBody.password,
+          userAuthData.password
+        ))
       ) {
         throw new HTTPError(
           HTTP_STATUS_CODE.UNAUTHORIZED,
