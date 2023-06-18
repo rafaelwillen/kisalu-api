@@ -127,4 +127,16 @@ export default class CategoryRepository extends Repository {
       throw error;
     }
   }
+
+  async getByName(name: string): Promise<Category | null> {
+    try {
+      const category = await this.prisma.category.findUnique({
+        where: { name },
+      });
+      return category;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
 }

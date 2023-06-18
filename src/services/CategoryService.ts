@@ -19,6 +19,14 @@ export default class CategoryService {
       administratorRepository.close();
       if (!admin) throw new Error("Administrator not found");
       const parsedCategoryBody = parseBodyForCreateCategory(request);
+      const categoryExists = await this.categoryRepository.getByName(
+        parsedCategoryBody.name
+      );
+      if (categoryExists)
+        throw new HTTPError(
+          HTTP_STATUS_CODE.CONFLICT,
+          "Category already exists"
+        );
       const createdCategory = await this.categoryRepository.create({
         ...parsedCategoryBody,
         creatorAdminId: admin.id,
@@ -140,6 +148,14 @@ export default class CategoryService {
     try {
       const { id } = parseCategoryByIdParams(request);
       const parsedCategoryBody = parseBodyForCreateCategory(request);
+      const categoryExists = await this.categoryRepository.getByName(
+        parsedCategoryBody.name
+      );
+      if (categoryExists)
+        throw new HTTPError(
+          HTTP_STATUS_CODE.CONFLICT,
+          "Category already exists"
+        );
       const updatedCategory = await this.categoryRepository.update(id, {
         ...parsedCategoryBody,
         slug: slugifyName(parsedCategoryBody.name),
