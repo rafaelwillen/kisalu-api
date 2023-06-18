@@ -1,6 +1,7 @@
 import { HTTP_STATUS_CODE } from "@/constants";
 import { AdministratorRepository, CategoryRepository } from "@/repository";
 import { slugifyName } from "@/utils";
+import HTTPError from "@/utils/error/HTTPError";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { omit } from "underscore";
 import { z } from "zod";
@@ -95,15 +96,43 @@ export default class CategoryService {
   }
 
   async getCategoryByID(request: FastifyRequest, reply: FastifyReply) {
-    throw new Error("Not implemented");
+    this.categoryRepository = new CategoryRepository();
+    try {
+      const { id } = parseCategoryByIdParams(request);
+      const category = await this.categoryRepository.getSingle(id);
+      this.categoryRepository.close();
+      if (!category)
+        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Category not found");
+      return reply.send(category);
+    } catch (error) {
+      handleServiceError(error, [this.categoryRepository], reply);
+    }
   }
 
   async getCategoryBySlug(request: FastifyRequest, reply: FastifyReply) {
-    throw new Error("Not implemented");
+    this.categoryRepository = new CategoryRepository();
+    try {
+      const { slug } = parseCategoryBySlugParams(request);
+      const category = await this.categoryRepository.getBySlug(slug);
+      this.categoryRepository.close();
+      if (!category)
+        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Category not found");
+      return reply.send(category);
+    } catch (error) {
+      handleServiceError(error, [this.categoryRepository], reply);
+    }
   }
 
   async deleteCategory(request: FastifyRequest, reply: FastifyReply) {
-    throw new Error("Not implemented");
+    this.categoryRepository = new CategoryRepository();
+    try {
+      const { id } = parseCategoryByIdParams(request);
+       await this.categoryRepository.delete(id);
+      this.categoryRepository.close();
+      return reply.send();
+    } catch (error) {
+      handleServiceError(error, [this.categoryRepository], reply);
+    }
   }
 
   async updateCategory(request: FastifyRequest, reply: FastifyReply) {
@@ -119,4 +148,18 @@ function parseBodyForCreateCategory(request: FastifyRequest) {
     description: z.string().nonempty().min(3).max(255),
   });
   return schema.parse(request.body);
+}
+
+function parseCategoryByIdParams(request: FastifyRequest) {
+  const schema = z.object({
+    id: z.string().uuid(),
+  });
+  return schema.parse(request.params);
+}
+
+function parseCategoryBySlugParams(request: FastifyRequest) {
+  const schema = z.object({
+    slug: z.string().nonempty().min(3).max(255),
+  });
+  return schema.parse(request.params);
 }

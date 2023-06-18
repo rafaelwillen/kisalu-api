@@ -4,9 +4,15 @@ import Repository from "./Repository";
 type CreatableCategory = Omit<Category, "id" | "createdAt">;
 
 export type CompleteCategoryType = Category & {
-  services: Service[];
-  projects: Project[];
-  admin: User | null;
+  services: Omit<
+    Service,
+    "featuresImagesURL" | "isHighlighted" | "categoryId"
+  >[];
+  projects: Omit<Project, "featuresImagesURL" | "categoryId">[];
+  admin: Pick<
+    User,
+    "id" | "firstName" | "lastName" | "avatarImageURL" | "gender"
+  > | null;
 };
 
 export default class CategoryRepository extends Repository {
@@ -50,7 +56,15 @@ export default class CategoryRepository extends Repository {
         include: {
           services: true,
           projects: true,
-          admin: true,
+          admin: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              avatarImageURL: true,
+              gender: true,
+            },
+          },
         },
       });
       return category;
@@ -67,7 +81,15 @@ export default class CategoryRepository extends Repository {
         include: {
           services: true,
           projects: true,
-          admin: true,
+          admin: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              avatarImageURL: true,
+              gender: true,
+            },
+          },
         },
       });
       return category;
