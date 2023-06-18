@@ -15,6 +15,11 @@ export type CompleteCategoryType = Category & {
   > | null;
 };
 
+export type EditableCategory = Omit<
+  Category,
+  "id" | "createdAt" | "creatorAdminId"
+>;
+
 export default class CategoryRepository extends Repository {
   constructor() {
     super();
@@ -110,5 +115,16 @@ export default class CategoryRepository extends Repository {
     }
   }
 
-  // TODO: Implement the update method
+  async update(id: string, data: EditableCategory): Promise<Category> {
+    try {
+      const updatedCategory = await this.prisma.category.update({
+        where: { id },
+        data,
+      });
+      return updatedCategory;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
 }
