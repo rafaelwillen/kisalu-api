@@ -9,7 +9,7 @@ import { randomUUID } from "node:crypto";
 import { extname } from "node:path";
 
 export default class UploadService {
-  async uploadCategoryBanner(request: FastifyRequest, reply: FastifyReply) {
+  async uploadCategoryImage(request: FastifyRequest, reply: FastifyReply) {
     const data = await request.file();
     if (!data)
       throw new HTTPError(HTTP_STATUS_CODE.BAD_REQUEST, "No File received");
