@@ -1,4 +1,5 @@
 import { HTTP_STATUS_CODE } from "@/constants";
+import { hashPassword } from "@/lib/passwordHashing";
 import { AdministratorRepository } from "@/repository";
 import { CompleteAdministratorType } from "@/repository/AdministratorRepository";
 import { noSymbolRegex } from "@/utils/regex";
@@ -15,8 +16,9 @@ export default class AdministratorService {
     try {
       const parsedAdminBody = parseAdminCreationBody(request);
       const { password, email, ...userData } = parsedAdminBody;
+      const hashedPassword = await hashPassword(password);
       const createdAdmin = await this.administratorRepository.create({
-        auth: { password, email },
+        auth: { password: hashedPassword, email },
         ...userData,
       });
       this.administratorRepository.close();
