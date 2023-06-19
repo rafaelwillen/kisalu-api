@@ -40,12 +40,8 @@ export default class UploadService {
 
   async deleteCategoryImage(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const { objectURL } = parseObjectURL(request);
-      const decodedPath = decodeObjectURL(objectURL);
-      const fileName = decodedPath.split("/").pop();
-      if (!fileName?.includes("_category"))
-        throw new HTTPError(HTTP_STATUS_CODE.BAD_REQUEST, "Invalid file type");
-      const ref = `images/category/${fileName}`;
+      const { filename } = parseFilenameParams(request);
+      const ref = `images/category/${filename}`;
       await deleteFile(ref);
       reply.send();
     } catch (error) {
@@ -54,19 +50,13 @@ export default class UploadService {
   }
 }
 
-function parseObjectURL(request: FastifyRequest) {
-  try {
-    const schema = z.object({
-      objectURL: z.string().url(),
-    });
-    return schema.parse(request.body);
-  } catch (error) {
-    throw new HTTPError(
-      HTTP_STATUS_CODE.BAD_REQUEST,
-      "Invalid body",
-      error as Error
-    );
-  }
+function parseFilenameParams(request: FastifyRequest) {
+  const schema = z.object({
+    filename: z.string().includes("_category", {
+      message: "Invalid filename",
+    }),
+  });
+  return schema.parse(request.params);
 }
 
 async function upload(path: string, contentType: string, data: Buffer) {
@@ -81,10 +71,4 @@ async function upload(path: string, contentType: string, data: Buffer) {
 async function deleteFile(path: string) {
   const fileRef = ref(storage, path);
   await deleteObject(fileRef);
-}
-
-function decodeObjectURL(objectURL: string) {
-  const path = new URL(objectURL).pathname;
-  const decodedPath = decodeURIComponent(path);
-  return decodedPath;
 }
