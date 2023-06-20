@@ -1,11 +1,12 @@
 import { HTTP_STATUS_CODE } from "@/constants";
+import { hashPassword } from "@/lib/passwordHashing";
 import { AdministratorRepository } from "@/repository";
 import { CompleteAdministratorType } from "@/repository/AdministratorRepository";
 import { noSymbolRegex } from "@/utils/regex";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { omit } from "underscore";
 import z from "zod";
-import { handleServiceError } from ".";
+import { handleServiceError, parseIdParams } from ".";
 
 export default class AdministratorService {
   private administratorRepository: AdministratorRepository | undefined;
@@ -15,8 +16,9 @@ export default class AdministratorService {
     try {
       const parsedAdminBody = parseAdminCreationBody(request);
       const { password, email, ...userData } = parsedAdminBody;
+      const hashedPassword = await hashPassword(password);
       const createdAdmin = await this.administratorRepository.create({
-        auth: { password, email },
+        auth: { password: hashedPassword, email },
         ...userData,
       });
       this.administratorRepository.close();
@@ -33,6 +35,21 @@ export default class AdministratorService {
       this.administratorRepository.close();
       const safeAdministrators = cleanGetAllAdministratorsReply(administrators);
       return reply.code(HTTP_STATUS_CODE.OK).send(safeAdministrators);
+    } catch (error) {
+      handleServiceError(error, [this.administratorRepository], reply);
+    }
+  }
+
+  async getSingleAdministrator(request: FastifyRequest, reply: FastifyReply) {
+    this.administratorRepository = new AdministratorRepository();
+    try {
+      const { id } = parseIdParams(request);
+      const administrator = await this.administratorRepository.getByID(id);
+      this.administratorRepository.close();
+      console.log(administrator);
+
+      if (!administrator) return reply.code(HTTP_STATUS_CODE.NOT_FOUND).send();
+      return reply.send(administrator);
     } catch (error) {
       handleServiceError(error, [this.administratorRepository], reply);
     }
