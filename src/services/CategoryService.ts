@@ -1,10 +1,11 @@
 import { HTTP_STATUS_CODE } from "@/constants";
 import { AdministratorRepository, CategoryRepository } from "@/repository";
 import { slugifyName } from "@/utils";
+import HTTPError from "@/utils/error/HTTPError";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { omit } from "underscore";
 import { z } from "zod";
-import { handleServiceError } from ".";
+import { handleServiceError, parseIdParams } from ".";
 
 export default class CategoryService {
   private categoryRepository: CategoryRepository | undefined;
@@ -18,6 +19,14 @@ export default class CategoryService {
       administratorRepository.close();
       if (!admin) throw new Error("Administrator not found");
       const parsedCategoryBody = parseBodyForCreateCategory(request);
+      const categoryExists = await this.categoryRepository.getByName(
+        parsedCategoryBody.name
+      );
+      if (categoryExists)
+        throw new HTTPError(
+          HTTP_STATUS_CODE.CONFLICT,
+          "Category already exists"
+        );
       const createdCategory = await this.categoryRepository.create({
         ...parsedCategoryBody,
         creatorAdminId: admin.id,
@@ -95,19 +104,67 @@ export default class CategoryService {
   }
 
   async getCategoryByID(request: FastifyRequest, reply: FastifyReply) {
-    throw new Error("Not implemented");
+    this.categoryRepository = new CategoryRepository();
+    try {
+      const { id } = parseIdParams(request);
+      const category = await this.categoryRepository.getSingle(id);
+      this.categoryRepository.close();
+      if (!category)
+        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Category not found");
+      return reply.send(category);
+    } catch (error) {
+      handleServiceError(error, [this.categoryRepository], reply);
+    }
   }
 
   async getCategoryBySlug(request: FastifyRequest, reply: FastifyReply) {
-    throw new Error("Not implemented");
+    this.categoryRepository = new CategoryRepository();
+    try {
+      const { slug } = parseCategoryBySlugParams(request);
+      const category = await this.categoryRepository.getBySlug(slug);
+      this.categoryRepository.close();
+      if (!category)
+        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Category not found");
+      return reply.send(category);
+    } catch (error) {
+      handleServiceError(error, [this.categoryRepository], reply);
+    }
   }
 
   async deleteCategory(request: FastifyRequest, reply: FastifyReply) {
-    throw new Error("Not implemented");
+    this.categoryRepository = new CategoryRepository();
+    try {
+      const { id } = parseIdParams(request);
+      await this.categoryRepository.delete(id);
+      this.categoryRepository.close();
+      return reply.send();
+    } catch (error) {
+      handleServiceError(error, [this.categoryRepository], reply);
+    }
   }
 
   async updateCategory(request: FastifyRequest, reply: FastifyReply) {
-    throw new Error("Not implemented");
+    this.categoryRepository = new CategoryRepository();
+    try {
+      const { id } = parseIdParams(request);
+      const parsedCategoryBody = parseBodyForCreateCategory(request);
+      const categoryExists = await this.categoryRepository.getByName(
+        parsedCategoryBody.name
+      );
+      if (categoryExists)
+        throw new HTTPError(
+          HTTP_STATUS_CODE.CONFLICT,
+          "Category already exists"
+        );
+      const updatedCategory = await this.categoryRepository.update(id, {
+        ...parsedCategoryBody,
+        slug: slugifyName(parsedCategoryBody.name),
+      });
+      this.categoryRepository.close();
+      return reply.send(updatedCategory);
+    } catch (error) {
+      handleServiceError(error, [this.categoryRepository], reply);
+    }
   }
 }
 
@@ -119,4 +176,12 @@ function parseBodyForCreateCategory(request: FastifyRequest) {
     description: z.string().nonempty().min(3).max(255),
   });
   return schema.parse(request.body);
+}
+
+
+function parseCategoryBySlugParams(request: FastifyRequest) {
+  const schema = z.object({
+    slug: z.string().nonempty().min(3).max(255),
+  });
+  return schema.parse(request.params);
 }

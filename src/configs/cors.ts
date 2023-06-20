@@ -8,8 +8,10 @@ async function configCORS(fastify: FastifyInstance) {
       "https://kisalu.live",
       /rafaelwillen\.vercel\.app$/,
     ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   });
+
 }
 
 export default configCORS;

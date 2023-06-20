@@ -5,12 +5,9 @@ const useEnsureAdminIsAuthenticated: FastifyHookFunction = async (
   request,
   reply
 ) => {
-  try {
-    const payload = await verifyJWT(request);
-    if (payload.role !== "admin") throw new Error("Unauthorized");
-  } catch (error) {
-    reply.status(401).send({ message: "Unauthorized" });
-  }
+  const payload = await verifyJWT(request);
+  if (payload.role !== "Administrator")
+    return reply.status(401).send({ message: "Unauthorized" });
 };
 
 export default useEnsureAdminIsAuthenticated;

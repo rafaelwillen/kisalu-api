@@ -3,13 +3,19 @@ import { HTTP_STATUS_CODE } from "@/constants";
 import HTTPError from "@/utils/error/HTTPError";
 import { imageMimetypeRegex } from "@/utils/regex";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { FirebaseError } from "firebase/app";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import {
+  deleteObject,
+  getDownloadURL,
+  ref,
+  uploadBytes,
+} from "firebase/storage";
 import { randomUUID } from "node:crypto";
 import { extname } from "node:path";
+import z from "zod";
+import { handleUploadError } from ".";
 
 export default class UploadService {
-  async uploadCategoryBanner(request: FastifyRequest, reply: FastifyReply) {
+  async uploadCategoryImage(request: FastifyRequest, reply: FastifyReply) {
     const data = await request.file();
     if (!data)
       throw new HTTPError(HTTP_STATUS_CODE.BAD_REQUEST, "No File received");
@@ -28,22 +34,29 @@ export default class UploadService {
         url,
       });
     } catch (error) {
-      if (error instanceof FirebaseError) {
-        if (error.code === "storage/unauthorized")
-          throw new HTTPError(
-            HTTP_STATUS_CODE.UNAUTHORIZED,
-            "Unauthorized",
-            error
-          );
-        reply
-          .code(HTTP_STATUS_CODE.INTERNAL_SERVER_ERROR)
-          .send({ message: error.message, code: error.code });
-      } else
-        reply
-          .code(HTTP_STATUS_CODE.INTERNAL_SERVER_ERROR)
-          .send({ message: "Internal server error" });
+      handleUploadError(error, reply);
     }
   }
+
+  async deleteCategoryImage(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { filename } = parseFilenameParams(request);
+      const ref = `images/category/${filename}`;
+      await deleteFile(ref);
+      reply.send();
+    } catch (error) {
+      handleUploadError(error, reply);
+    }
+  }
+}
+
+function parseFilenameParams(request: FastifyRequest) {
+  const schema = z.object({
+    filename: z.string().includes("_category", {
+      message: "Invalid filename",
+    }),
+  });
+  return schema.parse(request.params);
 }
 
 async function upload(path: string, contentType: string, data: Buffer) {
@@ -53,4 +66,9 @@ async function upload(path: string, contentType: string, data: Buffer) {
   });
   const url = await getDownloadURL(fileRef);
   return url;
+}
+
+async function deleteFile(path: string) {
+  const fileRef = ref(storage, path);
+  await deleteObject(fileRef);
 }
