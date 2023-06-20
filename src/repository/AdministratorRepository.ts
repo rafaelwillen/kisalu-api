@@ -48,10 +48,12 @@ export default class AdministratorRepository extends Repository {
       },
       include: {
         auth: true,
+        disputes: true,
+        createdCategories: true,
       },
     });
     if (!user) return null;
-    if (user?.auth.role !== "Administrator") return null;
+    if (user.auth.role !== "Administrator") return null;
     return user;
   }
 
