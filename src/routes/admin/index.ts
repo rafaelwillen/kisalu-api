@@ -18,6 +18,11 @@ export default function adminRoutes(
     },
     adminService.getAllAdministrators
   );
+  app.get(
+    "/:id",
+    { onRequest: [useEnsureAdminIsAuthenticated] },
+    adminService.getSingleAdministrator
+  );
 
   // Categories routes
   app.register(adminCategoriesRoutes, { prefix: "/category" });

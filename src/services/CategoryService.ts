@@ -5,7 +5,7 @@ import HTTPError from "@/utils/error/HTTPError";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { omit } from "underscore";
 import { z } from "zod";
-import { handleServiceError } from ".";
+import { handleServiceError, parseIdParams } from ".";
 
 export default class CategoryService {
   private categoryRepository: CategoryRepository | undefined;
@@ -106,7 +106,7 @@ export default class CategoryService {
   async getCategoryByID(request: FastifyRequest, reply: FastifyReply) {
     this.categoryRepository = new CategoryRepository();
     try {
-      const { id } = parseCategoryByIdParams(request);
+      const { id } = parseIdParams(request);
       const category = await this.categoryRepository.getSingle(id);
       this.categoryRepository.close();
       if (!category)
@@ -134,7 +134,7 @@ export default class CategoryService {
   async deleteCategory(request: FastifyRequest, reply: FastifyReply) {
     this.categoryRepository = new CategoryRepository();
     try {
-      const { id } = parseCategoryByIdParams(request);
+      const { id } = parseIdParams(request);
       await this.categoryRepository.delete(id);
       this.categoryRepository.close();
       return reply.send();
@@ -146,7 +146,7 @@ export default class CategoryService {
   async updateCategory(request: FastifyRequest, reply: FastifyReply) {
     this.categoryRepository = new CategoryRepository();
     try {
-      const { id } = parseCategoryByIdParams(request);
+      const { id } = parseIdParams(request);
       const parsedCategoryBody = parseBodyForCreateCategory(request);
       const categoryExists = await this.categoryRepository.getByName(
         parsedCategoryBody.name
@@ -178,12 +178,6 @@ function parseBodyForCreateCategory(request: FastifyRequest) {
   return schema.parse(request.body);
 }
 
-function parseCategoryByIdParams(request: FastifyRequest) {
-  const schema = z.object({
-    id: z.string().uuid(),
-  });
-  return schema.parse(request.params);
-}
 
 function parseCategoryBySlugParams(request: FastifyRequest) {
   const schema = z.object({
