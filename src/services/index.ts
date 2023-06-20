@@ -1,9 +1,9 @@
 import { HTTP_STATUS_CODE } from "@/constants";
 import Repository from "@/repository/Repository";
 import HTTPError from "@/utils/error/HTTPError";
-import { FastifyReply } from "fastify";
+import { FastifyReply, FastifyRequest } from "fastify";
 import { FirebaseError } from "firebase/app";
-import { ZodError } from "zod";
+import z, { ZodError } from "zod";
 
 export function handleServiceError(
   error: unknown,
@@ -41,4 +41,11 @@ export function handleUploadError(error: unknown, reply: FastifyReply) {
         message: "Object not found in Firebase Storage",
       });
   }
+}
+
+export function parseIdParams(request: FastifyRequest) {
+  const schema = z.object({
+    id: z.string().uuid(),
+  });
+  return schema.parse(request.params);
 }
