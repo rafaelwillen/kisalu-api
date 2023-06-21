@@ -53,7 +53,7 @@ model User {
   biography          String?
   birthDate          DateTime?
   gender             Gender
-  auth               Auth             @relation(fields: [loginId], references: [id])
+  auth               Auth             @relation(fields: [loginId], references: [id], onDelete: Cascade)
   loginId            String           @unique
   biddings           Bidding[]
   experienceInfo     ExperienceInfo[]
