@@ -2,6 +2,7 @@ import { HTTP_STATUS_CODE } from "@/constants";
 import { hashPassword } from "@/lib/passwordHashing";
 import { AdministratorRepository } from "@/repository";
 import { CompleteAdministratorType } from "@/repository/AdministratorRepository";
+import HTTPError from "@/utils/error/HTTPError";
 import { noSymbolRegex } from "@/utils/regex";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { omit } from "underscore";
@@ -16,6 +17,14 @@ export default class AdministratorService {
     try {
       const parsedAdminBody = parseAdminCreationBody(request);
       const { password, email, ...userData } = parsedAdminBody;
+      const adminWithEmail = await this.administratorRepository.getByEmail(
+        email
+      );
+      if (adminWithEmail)
+        throw new HTTPError(
+          HTTP_STATUS_CODE.CONFLICT,
+          "An administrator with this email already exists"
+        );
       const hashedPassword = await hashPassword(password);
       const createdAdmin = await this.administratorRepository.create({
         auth: { password: hashedPassword, email },
