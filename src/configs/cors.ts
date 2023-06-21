@@ -4,7 +4,7 @@ import { FastifyInstance } from "fastify";
 async function configCORS(fastify: FastifyInstance) {
   fastify.register(fastifyCors, {
     origin: [
-      "http://localhost:3000",
+      /^http:\/\/localhost:/,
       "https://kisalu.live",
       /rafaelwillen\.vercel\.app$/,
     ],
