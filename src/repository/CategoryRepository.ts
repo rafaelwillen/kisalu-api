@@ -46,6 +46,7 @@ export default class CategoryRepository extends Repository {
           projects: true,
           admin: true,
         },
+        orderBy: { name: "asc" },
       });
       return categories;
     } catch (error) {

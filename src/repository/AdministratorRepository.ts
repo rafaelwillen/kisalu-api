@@ -90,6 +90,7 @@ export default class AdministratorRepository extends Repository {
         disputes: true,
         createdCategories: true,
       },
+      orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
     });
     return administrators;
   }

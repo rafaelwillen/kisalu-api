@@ -55,8 +55,6 @@ export default class AdministratorService {
       const { id } = parseIdParams(request);
       const administrator = await this.administratorRepository.getByID(id);
       this.administratorRepository.close();
-      console.log(administrator);
-
       if (!administrator) return reply.code(HTTP_STATUS_CODE.NOT_FOUND).send();
       return reply.send(administrator);
     } catch (error) {
@@ -171,9 +169,13 @@ function cleanGetAllAdministratorsReply(
         "password"
       ),
       disputes: administrator.disputes,
-      createdCategories: administrator.createdCategories.map((category) =>
-        omit(category, "creatorAdminId")
-      ),
+      createdCategories: administrator.createdCategories
+        .map((category) => omit(category, "creatorAdminId"))
+        .sort((a, b) => {
+          if (a.name < b.name) return -1;
+          else if (a.name > b.name) return 1;
+          return 0;
+        }),
     };
     return parsedData;
   });
