@@ -30,6 +30,13 @@ export default function adminRoutes(
     },
     adminService.deleteAdmin
   );
+  app.put(
+    "/:id",
+    {
+      onRequest: [useEnsureAdminIsAuthenticated],
+    },
+    adminService.updateAdministrator
+  );
 
   // Categories routes
   app.register(adminCategoriesRoutes, { prefix: "/category" });

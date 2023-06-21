@@ -96,6 +96,28 @@ export default class AdministratorService {
       handleServiceError(error, [this.administratorRepository], reply);
     }
   }
+
+  async updateAdministrator(request: FastifyRequest, reply: FastifyReply) {
+    this.administratorRepository = new AdministratorRepository();
+    try {
+      const { id } = parseIdParams(request);
+      const parsedAdminBody = parseAdminUpdateBody(request);
+      const adminToUpdate = await this.administratorRepository.getByID(id);
+      if (!adminToUpdate)
+        throw new HTTPError(
+          HTTP_STATUS_CODE.NOT_FOUND,
+          "Administrator not found"
+        );
+      const updatedAdmin = await this.administratorRepository.update(
+        id,
+        parsedAdminBody
+      );
+      this.administratorRepository.close();
+      return reply.send(updatedAdmin);
+    } catch (error) {
+      handleServiceError(error, [this.administratorRepository], reply);
+    }
+  }
 }
 
 function parseAdminCreationBody(request: FastifyRequest) {
@@ -106,6 +128,24 @@ function parseAdminCreationBody(request: FastifyRequest) {
     gender: z.enum(["Male", "Female"]),
     email: z.string().email(),
     password: z.string().min(8).max(20),
+  });
+  return schema.parse(request.body);
+}
+
+function parseAdminUpdateBody(request: FastifyRequest) {
+  const schema = z.object({
+    firstName: z
+      .string()
+      .min(3)
+      .regex(noSymbolRegex, "No symbols allowed")
+      .optional(),
+    lastName: z
+      .string()
+      .min(3)
+      .regex(noSymbolRegex, "No symbols allowed")
+      .optional(),
+    avatarImageURL: z.string().url().optional(),
+    gender: z.enum(["Male", "Female"]).optional(),
   });
   return schema.parse(request.body);
 }

@@ -21,6 +21,13 @@ export type CompleteAdministratorType = Omit<
   createdCategories: Category[];
 };
 
+export type AdminUpdateType = {
+  firstName?: string;
+  lastName?: string;
+  avatarImageURL?: string;
+  gender?: Gender;
+};
+
 export default class AdministratorRepository extends Repository {
   constructor() {
     super();
@@ -91,5 +98,15 @@ export default class AdministratorRepository extends Repository {
     await this.prisma.auth.delete({
       where: { email },
     });
+  }
+
+  async update(id: string, data: AdminUpdateType): Promise<User> {
+    const updatedAdministrator = await this.prisma.user.update({
+      where: {
+        id,
+      },
+      data,
+    });
+    return updatedAdministrator;
   }
 }
