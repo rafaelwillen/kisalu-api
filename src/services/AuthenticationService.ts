@@ -1,6 +1,6 @@
 import { signJWT, verifyJWT } from "@/configs/jwt";
 import { HTTP_STATUS_CODE } from "@/constants";
-import { comparePasswords } from "@/lib/passwordHashing";
+import { comparePasswords, hashPassword } from "@/lib/passwordHashing";
 import { AuthRepository } from "@/repository/AuthRepository";
 import HTTPError from "@/utils/error/HTTPError";
 import { FastifyReply, FastifyRequest } from "fastify";
@@ -85,12 +85,56 @@ export default class AuthenticationService {
       handleServiceError(error, [this.authenticationRepository], reply);
     }
   }
+
+  async resetAdministratorPassword(
+    request: FastifyRequest,
+    reply: FastifyReply
+  ) {
+    this.authenticationRepository = new AuthRepository();
+    const mainAdminsEmails = [
+      "rafaelpadre@gmail.com",
+      "rafael.padre@kisalu.com",
+    ];
+    try {
+      if (!mainAdminsEmails.includes(request.user.email))
+        throw new HTTPError(
+          HTTP_STATUS_CODE.FORBIDDEN,
+          "You are not allowed to perform this action"
+        );
+      const { newPassword, email } = parsePasswordResetBody(request);
+      const userAuthData = await this.authenticationRepository.getByEmail(
+        email
+      );
+      if (!userAuthData || userAuthData.role !== "Administrator")
+        throw new HTTPError(
+          HTTP_STATUS_CODE.NOT_FOUND,
+          "Administrator not found"
+        );
+      const hashedPassword = await hashPassword(newPassword);
+      await this.authenticationRepository.updateAdminPassword(
+        email,
+        hashedPassword
+      );
+      this.authenticationRepository.close();
+      return reply.send();
+    } catch (error) {
+      handleServiceError(error, [this.authenticationRepository], reply);
+    }
+  }
 }
 
 function parseBodyForAuthentication(request: FastifyRequest) {
   const schema = z.object({
     email: z.string().email(),
     password: z.string().min(8),
+  });
+  return schema.parse(request.body);
+}
+
+function parsePasswordResetBody(request: FastifyRequest) {
+  const schema = z.object({
+    newPassword: z.string().min(8),
+    email: z.string().email(),
   });
   return schema.parse(request.body);
 }
