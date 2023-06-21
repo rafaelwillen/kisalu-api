@@ -63,6 +63,39 @@ export default class AdministratorService {
       handleServiceError(error, [this.administratorRepository], reply);
     }
   }
+
+  async deleteAdmin(request: FastifyRequest, reply: FastifyReply) {
+    this.administratorRepository = new AdministratorRepository();
+    const mainAdminsEmails = [
+      "rafaelpadre@gmail.com",
+      "rafael.padre@kisalu.com",
+    ];
+    try {
+      const { email } = parseAdminDeletionBody(request);
+      if (
+        mainAdminsEmails.includes(email) ||
+        !mainAdminsEmails.includes(request.user.email) ||
+        request.user.email === email
+      )
+        throw new HTTPError(
+          HTTP_STATUS_CODE.FORBIDDEN,
+          "You can't delete this administrator"
+        );
+      const adminToDelete = await this.administratorRepository.getByEmail(
+        email
+      );
+      if (!adminToDelete)
+        throw new HTTPError(
+          HTTP_STATUS_CODE.NOT_FOUND,
+          "Administrator not found"
+        );
+      await this.administratorRepository.delete(email);
+      this.administratorRepository.close();
+      return reply.send();
+    } catch (error) {
+      handleServiceError(error, [this.administratorRepository], reply);
+    }
+  }
 }
 
 function parseAdminCreationBody(request: FastifyRequest) {
@@ -73,6 +106,13 @@ function parseAdminCreationBody(request: FastifyRequest) {
     gender: z.enum(["Male", "Female"]),
     email: z.string().email(),
     password: z.string().min(8).max(20),
+  });
+  return schema.parse(request.body);
+}
+
+function parseAdminDeletionBody(request: FastifyRequest) {
+  const schema = z.object({
+    email: z.string().email(),
   });
   return schema.parse(request.body);
 }

@@ -86,4 +86,10 @@ export default class AdministratorRepository extends Repository {
     });
     return administrators;
   }
+
+  async delete(email: string): Promise<void> {
+    await this.prisma.auth.delete({
+      where: { email },
+    });
+  }
 }
