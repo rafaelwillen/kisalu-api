@@ -26,117 +26,83 @@ export default class CategoryRepository extends Repository {
   }
 
   async create(data: CreatableCategory): Promise<Category> {
-    try {
-      const newCategory = await this.prisma.category.create({
-        data,
-      });
-      this.close();
-      return newCategory;
-    } catch (error) {
-      this.close();
-      throw error;
-    }
+    const newCategory = await this.prisma.category.create({
+      data,
+    });
+    this.close();
+    return newCategory;
   }
 
   async getAll(): Promise<CompleteCategoryType[]> {
-    try {
-      const categories = await this.prisma.category.findMany({
-        include: {
-          services: true,
-          projects: true,
-          admin: true,
-        },
-      });
-      return categories;
-    } catch (error) {
-      console.log(error);
-      throw error;
-    }
+    const categories = await this.prisma.category.findMany({
+      include: {
+        services: true,
+        projects: true,
+        admin: true,
+      },
+      orderBy: { name: "asc" },
+    });
+    return categories;
   }
 
   async getSingle(id: string): Promise<CompleteCategoryType | null> {
-    try {
-      const category = await this.prisma.category.findUnique({
-        where: { id },
-        include: {
-          services: true,
-          projects: true,
-          admin: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              avatarImageURL: true,
-              gender: true,
-            },
+    const category = await this.prisma.category.findUnique({
+      where: { id },
+      include: {
+        services: true,
+        projects: true,
+        admin: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarImageURL: true,
+            gender: true,
           },
         },
-      });
-      return category;
-    } catch (error) {
-      console.log(error);
-      throw error;
-    }
+      },
+    });
+    return category;
   }
 
   async getBySlug(slug: string): Promise<CompleteCategoryType | null> {
-    try {
-      const category = await this.prisma.category.findUnique({
-        where: { slug },
-        include: {
-          services: true,
-          projects: true,
-          admin: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              avatarImageURL: true,
-              gender: true,
-            },
+    const category = await this.prisma.category.findUnique({
+      where: { slug },
+      include: {
+        services: true,
+        projects: true,
+        admin: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarImageURL: true,
+            gender: true,
           },
         },
-      });
-      return category;
-    } catch (error) {
-      console.log(error);
-      throw error;
-    }
+      },
+    });
+    return category;
   }
 
   async delete(id: string): Promise<void> {
-    try {
-      await this.prisma.category.delete({
-        where: { id },
-      });
-    } catch (error) {
-      console.log(error);
-      throw error;
-    }
+    await this.prisma.category.delete({
+      where: { id },
+    });
   }
 
   async update(id: string, data: EditableCategory): Promise<Category> {
-    try {
-      const updatedCategory = await this.prisma.category.update({
-        where: { id },
-        data,
-      });
-      return updatedCategory;
-    } catch (error) {
-      console.log(error);
-      throw error;
-    }
+    const updatedCategory = await this.prisma.category.update({
+      where: { id },
+      data,
+    });
+    return updatedCategory;
   }
 
   async getByName(name: string): Promise<Category | null> {
-    try {
-      const category = await this.prisma.category.findUnique({
-        where: { name },
-      });
-      return category;
-    } catch (error) {
-      console.log(error);
-      throw error;
-    }
+    const category = await this.prisma.category.findUnique({
+      where: { name },
+    });
+    return category;
   }
 }
