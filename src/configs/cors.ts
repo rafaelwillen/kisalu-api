@@ -5,7 +5,7 @@ async function configCORS(fastify: FastifyInstance) {
   fastify.register(fastifyCors, {
     origin: [
       /^http:\/\/localhost:/,
-      "https://kisalu.live",
+      "https://www.kisalu.live",
       /rafaelwillen\.vercel\.app$/,
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
