@@ -10,5 +10,6 @@ export default async function categoryRoutes(
 
   app.get("/popular-categories", categoryService.getPopularCategories);
   app.get("/", categoryService.getAllCategories);
-  app.get("/query", categoryService.queryCategoriesByName), done();
+  app.get("/query", categoryService.queryCategoriesByName);
+  done();
 }
