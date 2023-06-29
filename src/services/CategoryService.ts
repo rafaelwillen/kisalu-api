@@ -49,9 +49,17 @@ export default class CategoryService {
     this.categoryRepository = new CategoryRepository();
     try {
       const categories = await this.categoryRepository.getAll();
+      // TODO: Find a way to get the average rating of each category
       this.categoryRepository.close();
       const parsedCategories = categories.map(
         ({ services, projects, ...restOfCategory }) => ({
+          ...omit(
+            restOfCategory,
+            "admin",
+            "creatorAdminId",
+            "bannerImageURL",
+            "description"
+          ),
           totalServices: services.length,
           totalProjects: projects.length,
           availableServices: services.filter(
@@ -60,13 +68,6 @@ export default class CategoryService {
           availableProjects: projects.filter(
             (project) => project.state === "Available"
           ).length,
-          ...omit(
-            restOfCategory,
-            "id",
-            "admin",
-            "creatorAdminId",
-            "bannerImageURL"
-          ),
         })
       );
       return reply.send(parsedCategories);
@@ -182,6 +183,7 @@ export default class CategoryService {
       handleServiceError(error, [this.categoryRepository], reply);
     }
   }
+
 }
 
 function parseBodyForCreateCategory(request: FastifyRequest) {

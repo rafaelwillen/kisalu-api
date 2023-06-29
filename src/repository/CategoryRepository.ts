@@ -134,4 +134,8 @@ export default class CategoryRepository extends Repository {
     });
     return popularCategories;
   }
+
+  async getAverageRating(id: string) {
+    throw new Error("Method not implemented.");
+  }
 }
