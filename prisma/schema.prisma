@@ -134,11 +134,13 @@ model Portfolio {
 }
 
 model Review {
-  id           String  @id @default(uuid())
+  id           String   @id @default(uuid())
   rating       Int
   commentary   String
-  client       User?   @relation(fields: [clientUserId], references: [id])
+  client       User?    @relation(fields: [clientUserId], references: [id])
   clientUserId String?
+  activity     Activity @relation(fields: [activityId], references: [id])
+  activityId   String   @unique
 }
 
 model Activity {
@@ -159,6 +161,7 @@ model Activity {
   project             Project?      @relation(fields: [linkedProjectId], references: [id])
   linkedProjectId     String?
   address             Address?
+  review              Review?
 }
 
 model Service {
