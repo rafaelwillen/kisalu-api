@@ -49,9 +49,17 @@ export default class CategoryService {
     this.categoryRepository = new CategoryRepository();
     try {
       const categories = await this.categoryRepository.getAll();
+      // TODO: Find a way to get the average rating of each category
       this.categoryRepository.close();
       const parsedCategories = categories.map(
         ({ services, projects, ...restOfCategory }) => ({
+          ...omit(
+            restOfCategory,
+            "admin",
+            "creatorAdminId",
+            "bannerImageURL",
+            "description"
+          ),
           totalServices: services.length,
           totalProjects: projects.length,
           availableServices: services.filter(
@@ -60,13 +68,6 @@ export default class CategoryService {
           availableProjects: projects.filter(
             (project) => project.state === "Available"
           ).length,
-          ...omit(
-            restOfCategory,
-            "id",
-            "admin",
-            "creatorAdminId",
-            "bannerImageURL"
-          ),
         })
       );
       return reply.send(parsedCategories);
@@ -166,6 +167,39 @@ export default class CategoryService {
       handleServiceError(error, [this.categoryRepository], reply);
     }
   }
+
+  async getPopularCategories(request: FastifyRequest, reply: FastifyReply) {
+    this.categoryRepository = new CategoryRepository();
+    try {
+      const categories = await this.categoryRepository.getPopular();
+      this.categoryRepository.close();
+      const categoriesResponse = categories.map(({ _count, ...rest }) => ({
+        ...rest,
+        totalServices: _count.services,
+        totalProjects: _count.projects,
+      }));
+      return reply.send(categoriesResponse);
+    } catch (error) {
+      handleServiceError(error, [this.categoryRepository], reply);
+    }
+  }
+
+  async queryCategoriesByName(request: FastifyRequest, reply: FastifyReply) {
+    this.categoryRepository = new CategoryRepository();
+    try {
+      const { name } = parseNameQuery(request);
+      const categories = await this.categoryRepository.queryByName(name);
+      this.categoryRepository.close();
+      const categoriesResponse = categories.map(({ name, slug, id }) => ({
+        id,
+        name,
+        slug,
+      }));
+      return reply.send(categoriesResponse);
+    } catch (error) {
+      handleServiceError(error, [this.categoryRepository], reply);
+    }
+  }
 }
 
 function parseBodyForCreateCategory(request: FastifyRequest) {
@@ -178,10 +212,16 @@ function parseBodyForCreateCategory(request: FastifyRequest) {
   return schema.parse(request.body);
 }
 
-
 function parseCategoryBySlugParams(request: FastifyRequest) {
   const schema = z.object({
     slug: z.string().nonempty().min(3).max(255),
   });
   return schema.parse(request.params);
+}
+
+function parseNameQuery(request: FastifyRequest) {
+  const schema = z.object({
+    name: z.string().nonempty().min(3).max(255),
+  });
+  return schema.parse(request.query);
 }

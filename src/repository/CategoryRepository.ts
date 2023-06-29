@@ -105,4 +105,50 @@ export default class CategoryRepository extends Repository {
     });
     return category;
   }
+
+  async getPopular() {
+    const numberOfPopularCategories = 12;
+    // TODO: When the app grows, implement a better way to get popular categories
+    const popularCategories = await this.prisma.category.findMany({
+      take: numberOfPopularCategories,
+      orderBy: [
+        {
+          services: {
+            _count: "desc",
+          },
+        },
+        {
+          projects: {
+            _count: "desc",
+          },
+        },
+        {
+          name: "asc",
+        },
+      ],
+      select: {
+        _count: true,
+        name: true,
+        slug: true,
+      },
+    });
+    return popularCategories;
+  }
+
+  async getAverageRating(id: string) {
+    throw new Error("Method not implemented.");
+  }
+
+  queryByName(name: string) {
+    const foundCategories = this.prisma.category.findMany({
+      where: {
+        name: {
+          contains: name,
+          mode: "insensitive",
+        },
+      },
+      orderBy: { name: "asc" },
+    });
+    return foundCategories;
+  }
 }
