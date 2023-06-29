@@ -168,9 +168,19 @@ export default class CategoryService {
   }
 
   async getPopularCategories(request: FastifyRequest, reply: FastifyReply) {
-    reply.send({
-      message: "Not implemented yet",
-    });
+    this.categoryRepository = new CategoryRepository();
+    try {
+      const categories = await this.categoryRepository.getPopular();
+      this.categoryRepository.close();
+      const categoriesResponse = categories.map(({ _count, ...rest }) => ({
+        ...rest,
+        totalServices: _count.services,
+        totalProjects: _count.projects,
+      }));
+      return reply.send(categoriesResponse);
+    } catch (error) {
+      handleServiceError(error, [this.categoryRepository], reply);
+    }
   }
 }
 
