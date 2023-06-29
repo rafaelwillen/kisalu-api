@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import addressRoutes from "./address";
 import adminRoutes from "./admin";
 import authenticationRoutes from "./auth";
+import publicRoutes from "./public";
 import uploadRoutes from "./upload";
 
 async function routes(
@@ -13,6 +14,7 @@ async function routes(
   fastify.register(uploadRoutes, { prefix: "/upload" });
   fastify.register(authenticationRoutes, { prefix: "/auth" });
   fastify.register(addressRoutes, { prefix: "/address" });
+  fastify.register(publicRoutes, { prefix: "/public" });
 
   fastify.get("/", (_, reply) => {
     reply.send({
