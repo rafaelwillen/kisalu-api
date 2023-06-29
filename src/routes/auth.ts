@@ -11,6 +11,7 @@ export default async function authenticationRoutes(
 
   app.get("/me", authenticationService.getCurrentAuthenticatedUser);
   app.post("/login/admin", authenticationService.authenticateAdministrator);
+  app.post("/login", authenticationService.authenticateUser);
   app.put(
     "/password-reset/admin",
     {
@@ -18,6 +19,5 @@ export default async function authenticationRoutes(
     },
     authenticationService.resetAdministratorPassword
   );
-  app.post("/login", authenticationService.authenticateUser);
   done();
 }
