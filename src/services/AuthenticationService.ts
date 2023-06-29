@@ -17,7 +17,6 @@ export default class AuthenticationService {
   ) {
     this.authenticationRepository = new AuthRepository();
     try {
-      this.authenticationRepository = new AuthRepository();
       const parsedUserBody = parseBodyForAuthentication(request);
       const userAuthData = await this.authenticationRepository.getByEmail(
         parsedUserBody.email
@@ -117,6 +116,46 @@ export default class AuthenticationService {
       );
       this.authenticationRepository.close();
       return reply.send();
+    } catch (error) {
+      handleServiceError(error, [this.authenticationRepository], reply);
+    }
+  }
+
+  async authenticateUser(request: FastifyRequest, reply: FastifyReply) {
+    this.authenticationRepository = new AuthRepository();
+    try {
+      const parsedUserBody = parseBodyForAuthentication(request);
+      const userAuthData = await this.authenticationRepository.getByEmail(
+        parsedUserBody.email
+      );
+      this.authenticationRepository.close();
+      if (
+        !userAuthData ||
+        userAuthData.role === "Administrator" ||
+        !(await comparePasswords(
+          parsedUserBody.password,
+          userAuthData.password
+        ))
+      ) {
+        throw new HTTPError(
+          HTTP_STATUS_CODE.UNAUTHORIZED,
+          "Invalid credentials"
+        );
+      }
+      const token = await signJWT(reply, {
+        email: userAuthData.email,
+        role: userAuthData.role,
+      });
+      const { email, role, createdAt, User } = userAuthData;
+      reply.send({
+        token,
+        user: {
+          email,
+          role,
+          createdAt,
+          ...omit(User, "id", "loginId", "biography", "birthDate", "gender"),
+        },
+      });
     } catch (error) {
       handleServiceError(error, [this.authenticationRepository], reply);
     }
