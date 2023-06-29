@@ -138,4 +138,17 @@ export default class CategoryRepository extends Repository {
   async getAverageRating(id: string) {
     throw new Error("Method not implemented.");
   }
+
+  queryByName(name: string) {
+    const foundCategories = this.prisma.category.findMany({
+      where: {
+        name: {
+          contains: name,
+          mode: "insensitive",
+        },
+      },
+      orderBy: { name: "asc" },
+    });
+    return foundCategories;
+  }
 }

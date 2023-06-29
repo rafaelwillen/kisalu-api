@@ -184,6 +184,22 @@ export default class CategoryService {
     }
   }
 
+  async queryCategoriesByName(request: FastifyRequest, reply: FastifyReply) {
+    this.categoryRepository = new CategoryRepository();
+    try {
+      const { name } = parseNameQuery(request);
+      const categories = await this.categoryRepository.queryByName(name);
+      this.categoryRepository.close();
+      const categoriesResponse = categories.map(({ name, slug, id }) => ({
+        id,
+        name,
+        slug,
+      }));
+      return reply.send(categoriesResponse);
+    } catch (error) {
+      handleServiceError(error, [this.categoryRepository], reply);
+    }
+  }
 }
 
 function parseBodyForCreateCategory(request: FastifyRequest) {
@@ -196,10 +212,16 @@ function parseBodyForCreateCategory(request: FastifyRequest) {
   return schema.parse(request.body);
 }
 
-
 function parseCategoryBySlugParams(request: FastifyRequest) {
   const schema = z.object({
     slug: z.string().nonempty().min(3).max(255),
   });
   return schema.parse(request.params);
+}
+
+function parseNameQuery(request: FastifyRequest) {
+  const schema = z.object({
+    name: z.string().nonempty().min(3).max(255),
+  });
+  return schema.parse(request.query);
 }
