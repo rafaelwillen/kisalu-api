@@ -18,5 +18,6 @@ export default async function authenticationRoutes(
     },
     authenticationService.resetAdministratorPassword
   );
+  app.post("/login", authenticationService.authenticateUser);
   done();
 }
