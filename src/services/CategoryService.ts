@@ -166,6 +166,12 @@ export default class CategoryService {
       handleServiceError(error, [this.categoryRepository], reply);
     }
   }
+
+  async getPopularCategories(request: FastifyRequest, reply: FastifyReply) {
+    reply.send({
+      message: "Not implemented yet",
+    });
+  }
 }
 
 function parseBodyForCreateCategory(request: FastifyRequest) {
