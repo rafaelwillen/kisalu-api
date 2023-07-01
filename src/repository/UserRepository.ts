@@ -130,4 +130,16 @@ export default class UserRepository extends Repository {
       disputes: client.disputes,
     };
   }
+
+  async getByPhoneNumber(phoneNumber: string) {
+    const userAuth = await this.prisma.auth.findUnique({
+      where: { phoneNumber },
+      include: {
+        User: true,
+      },
+    });
+    if (!userAuth) return null;
+    if (userAuth.role === "Administrator") return null;
+    return userAuth.User;
+  }
 }

@@ -22,6 +22,13 @@ export class ProviderService {
           HTTP_STATUS_CODE.CONFLICT,
           "An user with this email already exists"
         );
+      const userWithPhoneNumber =
+        await this.providerRepository.getByPhoneNumber(phoneNumber);
+      if (userWithPhoneNumber)
+        throw new HTTPError(
+          HTTP_STATUS_CODE.CONFLICT,
+          "An user with this phone number already exists"
+        );
       const hashedPassword = await hashPassword(password);
       const createdClient = await this.providerRepository.createProvier({
         auth: {

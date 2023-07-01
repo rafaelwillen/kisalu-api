@@ -22,6 +22,14 @@ export class ClientService {
           HTTP_STATUS_CODE.CONFLICT,
           "An user with this email already exists"
         );
+      const userWithPhoneNumber = await this.clientRepository.getByPhoneNumber(
+        phoneNumber
+      );
+      if (userWithPhoneNumber)
+        throw new HTTPError(
+          HTTP_STATUS_CODE.CONFLICT,
+          "An user with this phone number already exists"
+        );
       const hashedPassword = await hashPassword(password);
       const createdClient = await this.clientRepository.createClient({
         auth: {
