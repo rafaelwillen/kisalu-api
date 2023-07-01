@@ -54,6 +54,7 @@ export default class UserRepository extends Repository {
         auth: {
           create: {
             ...data.auth,
+            isActive: true,
             role: "Client",
           },
         },
@@ -69,6 +70,7 @@ export default class UserRepository extends Repository {
         auth: {
           create: {
             ...data.auth,
+            isActive: true,
             role: "Provider",
           },
         },
