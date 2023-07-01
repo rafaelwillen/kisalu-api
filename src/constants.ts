@@ -15,4 +15,4 @@ export const HTTP_STATUS_CODE = {
   CONFLICT: 409,
 };
 
-export const ADULT_DATE_OF_BIRTH = subYears(new Date(), 18);
+export const ADULT_DATE_OF_BIRTH = subYears(new Date(), 17);
