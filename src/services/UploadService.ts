@@ -82,6 +82,40 @@ export default class UploadService {
       handleUploadError(error, reply);
     }
   }
+
+  async uploadProjectImage(request: FastifyRequest, reply: FastifyReply) {
+    const data = await request.file();
+    if (!data)
+      throw new HTTPError(HTTP_STATUS_CODE.BAD_REQUEST, "No File received");
+    const isValidMimetype = imageMimetypeRegex.test(data.mimetype);
+    if (!isValidMimetype)
+      throw new HTTPError(HTTP_STATUS_CODE.BAD_REQUEST, "Invalid file type");
+    const extension = extname(data.filename);
+    const fileName = randomUUID().concat("_project").concat(extension);
+    try {
+      const url = await upload(
+        `images/project/${fileName}`,
+        data.mimetype,
+        await data.toBuffer()
+      );
+      reply.code(HTTP_STATUS_CODE.CREATED).send({
+        url,
+      });
+    } catch (error) {
+      handleUploadError(error, reply);
+    }
+  }
+
+  async deleteProjectImage(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { filename } = parseFilenameParams(request, "_project");
+      const ref = `images/project/${filename}`;
+      await deleteFile(ref);
+      reply.send();
+    } catch (error) {
+      handleUploadError(error, reply);
+    }
+  }
 }
 
 function parseFilenameParams(request: FastifyRequest, includesString: string) {
