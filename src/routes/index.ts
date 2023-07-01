@@ -3,6 +3,7 @@ import addressRoutes from "./address";
 import adminRoutes from "./admin";
 import authenticationRoutes from "./auth";
 import categoryRoutes from "./category";
+import { clientRoutes } from "./client";
 import uploadRoutes from "./upload";
 
 async function routes(
@@ -15,6 +16,7 @@ async function routes(
   fastify.register(authenticationRoutes, { prefix: "/auth" });
   fastify.register(addressRoutes, { prefix: "/address" });
   fastify.register(categoryRoutes, { prefix: "/categories" });
+  fastify.register(clientRoutes, { prefix: "/client" });
 
   fastify.get("/", (_, reply) => {
     reply.send({
