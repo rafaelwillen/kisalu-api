@@ -1,7 +1,7 @@
 import { ClientService } from "@/services/ClientService";
 import { FastifyInstance } from "fastify";
 
-export function clientRoutes(
+export default function clientRoutes(
   app: FastifyInstance,
   options: any,
   done: () => void
