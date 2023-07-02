@@ -219,6 +219,25 @@ export default class CategoryService {
       handleServiceError(error, [this.categoryRepository], reply);
     }
   }
+
+  async getServicesByCategory(request: FastifyRequest, reply: FastifyReply) {
+    this.categoryRepository = new CategoryRepository();
+    try {
+      const { id } = parseIdParams(request);
+      const category = await this.categoryRepository.getSingle(id);
+      this.categoryRepository.close();
+      if (!category)
+        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Category not found");
+      const { services } = category;
+      return reply.send(
+        services
+          .map((service) => omit(service, "categoryId", "userId"))
+          .filter((service) => service.state !== "Draft")
+      );
+    } catch (error) {
+      handleServiceError(error, [this.categoryRepository], reply);
+    }
+  }
 }
 
 function parseBodyForCreateCategory(request: FastifyRequest) {
