@@ -11,9 +11,13 @@ export default function projectsRoutes(
   app.addHook("onRequest", useUserIsClient);
 
   app.post("/", projectService.createProject);
-  app.put("/:id/available", projectService.changeProjectState);
+  app.put("/:id/available", (request, reply) =>
+    projectService.changeProjectState(request, reply)
+  );
   app.get("/", projectService.getAllFromClient);
   app.get("/:id", projectService.getSingleProjectFromClient);
-  app.delete("/:id", projectService.deleteProject);
+  app.delete("/:id", (request, reply) =>
+    projectService.deleteProject(request, reply)
+  );
   done();
 }

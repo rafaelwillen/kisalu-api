@@ -59,21 +59,10 @@ export default class ProjectService {
     this.projectRepository = new ProjectRepository();
     this.clientRepository = new UserRepository();
     try {
-      const { email } = request.user;
-      const client = await this.clientRepository.getByEmail(email);
-      this.clientRepository.close();
-      if (!client)
-        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Client not found");
-      const { id: projectId } = parseIdParams(request);
-      const project = await this.projectRepository.getByIdFromOwner(
-        projectId,
-        client.id
-      );
-      if (!project)
-        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Project not found");
+      const { id, state } = await this.getProjectFromUser(request);
       const updatedProject = await this.projectRepository.toggleToAvailable(
-        projectId,
-        project.state === "Available" ? "Draft" : "Available"
+        id,
+        state === "Available" ? "Draft" : "Available"
       );
       this.projectRepository.close();
       return reply
@@ -165,19 +154,8 @@ export default class ProjectService {
     this.projectRepository = new ProjectRepository();
     this.clientRepository = new UserRepository();
     try {
-      const { email } = request.user;
-      const client = await this.clientRepository.getByEmail(email);
-      this.clientRepository.close();
-      if (!client)
-        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Client not found");
-      const { id: projectId } = parseIdParams(request);
-      const project = await this.projectRepository.getByIdFromOwner(
-        projectId,
-        client.id
-      );
-      if (!project)
-        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Project not found");
-      await this.projectRepository.delete(projectId);
+      const {id} = await this.getProjectFromUser(request);
+      await this.projectRepository.delete(id);
       this.projectRepository.close();
       return reply.send();
     } catch (error) {
@@ -187,6 +165,22 @@ export default class ProjectService {
         reply
       );
     }
+  }
+
+  private async getProjectFromUser(request: FastifyRequest) {
+    const { email } = request.user;
+    const client = await this.clientRepository?.getByEmail(email);
+    this.clientRepository?.close();
+    if (!client)
+      throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Client not found");
+    const { id: projectId } = parseIdParams(request);
+    const project = await this.projectRepository?.getByIdFromOwner(
+      projectId,
+      client.id
+    );
+    if (!project)
+      throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Project not found");
+    return project;
   }
 }
 
