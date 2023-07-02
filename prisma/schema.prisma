@@ -169,10 +169,10 @@ model Service {
   title             String
   description       String
   bannerImageURL    String?
-  publishedDate     DateTime
+  publishedDate     DateTime?
   createdAt         DateTime   @default(now())
   viewsCount        Int        @default(0)
-  state             State
+  state             State      @default(Draft)
   featuredImagesURL String[]
   minimumPrice      Int
   isHighlighted     Boolean
