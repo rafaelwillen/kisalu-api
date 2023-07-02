@@ -98,7 +98,7 @@ export default class ServiceService {
     }
   }
 
-  async getSingleProjectFromClient(
+  async getSingleServiceFromProvider(
     request: FastifyRequest,
     reply: FastifyReply
   ) {
