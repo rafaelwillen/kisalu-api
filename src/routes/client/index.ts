@@ -8,7 +8,7 @@ export default function clientRoutes(
   done: () => void
 ) {
   const clientService = new ClientService();
-  app.post("/", clientService.createClient);
+  app.post("/", (req, rep) => clientService.createClient(req, rep));
   app.register(projectsRoutes, { prefix: "/projects" });
   done();
 }

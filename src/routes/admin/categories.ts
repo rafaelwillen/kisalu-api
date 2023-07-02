@@ -11,10 +11,12 @@ export default function adminCategoriesRoutes(
 
   app.addHook("onRequest", useEnsureAdminIsAuthenticated);
 
-  app.post("/", categoryService.createCategory);
-  app.get("/", categoryService.getAllCategoriesAdminOnly);
-  app.get("/:id", categoryService.getCategoryByID);
-  app.delete("/:id", categoryService.deleteCategory);
-  app.put("/:id", categoryService.updateCategory);
+  app.post("/", (req, rep) => categoryService.createCategory(req, rep));
+  app.get("/", (req, rep) =>
+    categoryService.getAllCategoriesAdminOnly(req, rep)
+  );
+  app.get("/:id", (req, rep) => categoryService.getCategoryByID(req, rep));
+  app.delete("/:id", (req, rep) => categoryService.deleteCategory(req, rep));
+  app.put("/:id", (req, rep) => categoryService.updateCategory(req, rep));
   done();
 }

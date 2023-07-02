@@ -9,7 +9,7 @@ export default function providerRoutes(
 ) {
   const providerService = new ProviderService();
 
-  app.post("/", providerService.createProvider);
+  app.post("/", (req, rep) => providerService.createProvider(req, rep));
   app.register(servicesRoutes, { prefix: "/services" });
   done();
 }

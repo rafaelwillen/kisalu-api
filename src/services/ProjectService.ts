@@ -1,17 +1,18 @@
 import { HTTP_STATUS_CODE } from "@/constants";
+import ProjectParser from "@/parsers/ProjectParser";
 import { CategoryRepository } from "@/repository";
 import ProjectRepository from "@/repository/ProjectRepository";
 import UserRepository from "@/repository/UserRepository";
 import HTTPError from "@/utils/error/HTTPError";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { omit } from "underscore";
-import z from "zod";
-import { handleServiceError, parseIdParams } from ".";
+import { handleServiceError } from ".";
 
 export default class ProjectService {
   private projectRepository: ProjectRepository | undefined;
   private clientRepository: UserRepository | undefined;
   private categoryRepository: CategoryRepository | undefined;
+  private readonly parser = new ProjectParser();
 
   async createProject(request: FastifyRequest, reply: FastifyReply) {
     this.projectRepository = new ProjectRepository();
@@ -24,7 +25,7 @@ export default class ProjectService {
       if (!client)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Client not found");
       const { categoryName, ...parsedProject } =
-        parseBodyForCreateProject(request);
+        this.parser.parseBodyForCreation(request);
       const categoryToLink = await this.categoryRepository.getByName(
         categoryName
       );
@@ -103,7 +104,7 @@ export default class ProjectService {
   async getPublicProjectById(request: FastifyRequest, reply: FastifyReply) {
     this.projectRepository = new ProjectRepository();
     try {
-      const { id: projectId } = parseIdParams(request);
+      const { id: projectId } = this.parser.parseIdFromParams(request);
       const project = await this.projectRepository.getById(projectId);
       this.projectRepository.close();
       if (!project)
@@ -130,7 +131,7 @@ export default class ProjectService {
       this.clientRepository.close();
       if (!client)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Client not found");
-      const { id: projectId } = parseIdParams(request);
+      const { id: projectId } = this.parser.parseIdFromParams(request);
       const project = await this.projectRepository.getByIdFromOwner(
         projectId,
         client.id
@@ -154,7 +155,7 @@ export default class ProjectService {
     this.projectRepository = new ProjectRepository();
     this.clientRepository = new UserRepository();
     try {
-      const {id} = await this.getProjectFromUser(request);
+      const { id } = await this.getProjectFromUser(request);
       await this.projectRepository.delete(id);
       this.projectRepository.close();
       return reply.send();
@@ -173,7 +174,7 @@ export default class ProjectService {
     this.clientRepository?.close();
     if (!client)
       throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Client not found");
-    const { id: projectId } = parseIdParams(request);
+    const { id: projectId } = this.parser.parseIdFromParams(request);
     const project = await this.projectRepository?.getByIdFromOwner(
       projectId,
       client.id
@@ -184,21 +185,3 @@ export default class ProjectService {
   }
 }
 
-function parseBodyForCreateProject(request: FastifyRequest) {
-  const bodySchema = z
-    .object({
-      title: z.string().min(3),
-      description: z.string().min(3),
-      bannerImageURL: z.string().url().optional(),
-      featuredImagesURL: z.array(z.string().url()).optional(),
-      minimumPrice: z.number().int().min(0),
-      maximumPrice: z.number().int().min(0),
-      categoryName: z.string().min(3).max(255),
-    })
-    .refine(({ minimumPrice, maximumPrice }) => minimumPrice <= maximumPrice, {
-      message: "Minimum price must be less than or equal to maximum price",
-      path: ["minimumPrice", "maximumPrice"],
-    });
-  const parsedBody = bodySchema.parse(request.body);
-  return parsedBody;
-}

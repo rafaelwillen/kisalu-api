@@ -10,9 +10,11 @@ export default function servicesRoutes(
   const serviceService = new ServiceService();
   app.addHook("onRequest", useUserIsProvider);
 
-  app.post("/", serviceService.createService);
-  app.get("/", serviceService.getAllFromProvider);
-  app.get("/:id", serviceService.getSingleServiceFromProvider);
-  app.delete("/:id", serviceService.deleteService);
+  app.post("/", (req, rep) => serviceService.createService(req, rep));
+  app.get("/", (req, rep) => serviceService.getAllFromProvider(req, rep));
+  app.get("/:id", (req, rep) =>
+    serviceService.getSingleServiceFromProvider(req, rep)
+  );
+  app.delete("/:id", (req, rep) => serviceService.deleteService(req, rep));
   done();
 }

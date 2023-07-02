@@ -1,14 +1,15 @@
 import { HTTP_STATUS_CODE } from "@/constants";
+import CategoryParser from "@/parsers/CategoryParser";
 import { AdministratorRepository, CategoryRepository } from "@/repository";
 import { slugifyName } from "@/utils";
 import HTTPError from "@/utils/error/HTTPError";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { omit } from "underscore";
-import { z } from "zod";
-import { handleServiceError, parseIdParams } from ".";
+import { handleServiceError } from ".";
 
 export default class CategoryService {
   private categoryRepository: CategoryRepository | undefined;
+  private readonly parser = new CategoryParser();
 
   async createCategory(request: FastifyRequest, reply: FastifyReply) {
     this.categoryRepository = new CategoryRepository();
@@ -18,7 +19,7 @@ export default class CategoryService {
       const admin = await administratorRepository.getByEmail(email);
       administratorRepository.close();
       if (!admin) throw new Error("Administrator not found");
-      const parsedCategoryBody = parseBodyForCreateCategory(request);
+      const parsedCategoryBody = this.parser.parseBodyForCreation(request);
       const categoryExists = await this.categoryRepository.getByName(
         parsedCategoryBody.name
       );
@@ -107,7 +108,7 @@ export default class CategoryService {
   async getCategoryByID(request: FastifyRequest, reply: FastifyReply) {
     this.categoryRepository = new CategoryRepository();
     try {
-      const { id } = parseIdParams(request);
+      const { id } = this.parser.parseIdFromParams(request);
       const category = await this.categoryRepository.getSingle(id);
       this.categoryRepository.close();
       if (!category)
@@ -121,7 +122,7 @@ export default class CategoryService {
   async getCategoryBySlug(request: FastifyRequest, reply: FastifyReply) {
     this.categoryRepository = new CategoryRepository();
     try {
-      const { slug } = parseCategoryBySlugParams(request);
+      const { slug } = this.parser.parseSlugFromParams(request);
       const category = await this.categoryRepository.getBySlug(slug);
       this.categoryRepository.close();
       if (!category)
@@ -135,7 +136,7 @@ export default class CategoryService {
   async deleteCategory(request: FastifyRequest, reply: FastifyReply) {
     this.categoryRepository = new CategoryRepository();
     try {
-      const { id } = parseIdParams(request);
+      const { id } = this.parser.parseIdFromParams(request);
       await this.categoryRepository.delete(id);
       this.categoryRepository.close();
       return reply.send();
@@ -147,8 +148,8 @@ export default class CategoryService {
   async updateCategory(request: FastifyRequest, reply: FastifyReply) {
     this.categoryRepository = new CategoryRepository();
     try {
-      const { id } = parseIdParams(request);
-      const parsedCategoryBody = parseBodyForCreateCategory(request);
+      const { id } = this.parser.parseIdFromParams(request);
+      const parsedCategoryBody = this.parser.parseBodyForCreation(request);
       const categoryExists = await this.categoryRepository.getByName(
         parsedCategoryBody.name
       );
@@ -187,7 +188,7 @@ export default class CategoryService {
   async queryCategoriesByName(request: FastifyRequest, reply: FastifyReply) {
     this.categoryRepository = new CategoryRepository();
     try {
-      const { name } = parseNameQuery(request);
+      const { name } = this.parser.parseSearchQuery(request);
       const categories = await this.categoryRepository.queryByName(name);
       this.categoryRepository.close();
       const categoriesResponse = categories.map(({ name, slug, id }) => ({
@@ -204,7 +205,7 @@ export default class CategoryService {
   async getProjectsByCategory(request: FastifyRequest, reply: FastifyReply) {
     this.categoryRepository = new CategoryRepository();
     try {
-      const { id } = parseIdParams(request);
+      const { id } = this.parser.parseIdFromParams(request);
       const category = await this.categoryRepository.getSingle(id);
       this.categoryRepository.close();
       if (!category)
@@ -223,7 +224,7 @@ export default class CategoryService {
   async getServicesByCategory(request: FastifyRequest, reply: FastifyReply) {
     this.categoryRepository = new CategoryRepository();
     try {
-      const { id } = parseIdParams(request);
+      const { id } = this.parser.parseIdFromParams(request);
       const category = await this.categoryRepository.getSingle(id);
       this.categoryRepository.close();
       if (!category)
@@ -240,26 +241,3 @@ export default class CategoryService {
   }
 }
 
-function parseBodyForCreateCategory(request: FastifyRequest) {
-  const schema = z.object({
-    name: z.string().nonempty().min(3).max(255),
-    mainImageURL: z.string().url(),
-    bannerImageURL: z.string().url(),
-    description: z.string().nonempty().min(3).max(255),
-  });
-  return schema.parse(request.body);
-}
-
-function parseCategoryBySlugParams(request: FastifyRequest) {
-  const schema = z.object({
-    slug: z.string().nonempty().min(3).max(255),
-  });
-  return schema.parse(request.params);
-}
-
-function parseNameQuery(request: FastifyRequest) {
-  const schema = z.object({
-    name: z.string().nonempty().min(3).max(255),
-  });
-  return schema.parse(request.query);
-}

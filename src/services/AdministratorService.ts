@@ -1,21 +1,21 @@
 import { HTTP_STATUS_CODE } from "@/constants";
 import { hashPassword } from "@/lib/passwordHashing";
+import AdministratorParser from "@/parsers/AdministratoParser";
 import { AdministratorRepository } from "@/repository";
 import { CompleteAdministratorType } from "@/repository/AdministratorRepository";
 import HTTPError from "@/utils/error/HTTPError";
-import { noSymbolRegex } from "@/utils/regex";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { omit } from "underscore";
-import z from "zod";
-import { handleServiceError, parseIdParams } from ".";
+import { handleServiceError } from ".";
 
 export default class AdministratorService {
   private administratorRepository: AdministratorRepository | undefined;
+  private readonly parser = new AdministratorParser();
 
   async createAdministrator(request: FastifyRequest, reply: FastifyReply) {
     this.administratorRepository = new AdministratorRepository();
     try {
-      const parsedAdminBody = parseAdminCreationBody(request);
+      const parsedAdminBody = this.parser.parseCreationFromBody(request);
       const { password, email, ...userData } = parsedAdminBody;
       const adminWithEmail = await this.administratorRepository.getByEmail(
         email
@@ -52,7 +52,7 @@ export default class AdministratorService {
   async getSingleAdministrator(request: FastifyRequest, reply: FastifyReply) {
     this.administratorRepository = new AdministratorRepository();
     try {
-      const { id } = parseIdParams(request);
+      const { id } = this.parser.parseIdFromParams(request);
       const administrator = await this.administratorRepository.getByID(id);
       this.administratorRepository.close();
       if (!administrator) return reply.code(HTTP_STATUS_CODE.NOT_FOUND).send();
@@ -69,7 +69,7 @@ export default class AdministratorService {
       "rafael.padre@kisalu.com",
     ];
     try {
-      const { email } = parseAdminDeletionBody(request);
+      const { email } = this.parser.parseDeletionFromBody(request);
       if (
         mainAdminsEmails.includes(email) ||
         !mainAdminsEmails.includes(request.user.email) ||
@@ -98,8 +98,8 @@ export default class AdministratorService {
   async updateAdministrator(request: FastifyRequest, reply: FastifyReply) {
     this.administratorRepository = new AdministratorRepository();
     try {
-      const { id } = parseIdParams(request);
-      const parsedAdminBody = parseAdminUpdateBody(request);
+      const { id } = this.parser.parseIdFromParams(request);
+      const parsedAdminBody = this.parser.parseUpdateFromBody(request);
       const adminToUpdate = await this.administratorRepository.getByID(id);
       if (!adminToUpdate)
         throw new HTTPError(
@@ -118,42 +118,6 @@ export default class AdministratorService {
   }
 }
 
-function parseAdminCreationBody(request: FastifyRequest) {
-  const schema = z.object({
-    firstName: z.string().min(3).regex(noSymbolRegex, "No symbols allowed"),
-    lastName: z.string().min(3).regex(noSymbolRegex, "No symbols allowed"),
-    avatarImageURL: z.string().url(),
-    gender: z.enum(["Male", "Female"]),
-    email: z.string().email(),
-    password: z.string().min(8).max(20),
-  });
-  return schema.parse(request.body);
-}
-
-function parseAdminUpdateBody(request: FastifyRequest) {
-  const schema = z.object({
-    firstName: z
-      .string()
-      .min(3)
-      .regex(noSymbolRegex, "No symbols allowed")
-      .optional(),
-    lastName: z
-      .string()
-      .min(3)
-      .regex(noSymbolRegex, "No symbols allowed")
-      .optional(),
-    avatarImageURL: z.string().url().optional(),
-    gender: z.enum(["Male", "Female"]).optional(),
-  });
-  return schema.parse(request.body);
-}
-
-function parseAdminDeletionBody(request: FastifyRequest) {
-  const schema = z.object({
-    email: z.string().email(),
-  });
-  return schema.parse(request.body);
-}
 
 function cleanGetAllAdministratorsReply(
   administrators: CompleteAdministratorType[]
