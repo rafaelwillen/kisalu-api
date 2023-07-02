@@ -1,17 +1,18 @@
 import { HTTP_STATUS_CODE } from "@/constants";
+import ServiceParser from "@/parsers/ServiceParser";
 import { CategoryRepository } from "@/repository";
 import ServiceRepository from "@/repository/ServiceRepository";
 import UserRepository from "@/repository/UserRepository";
 import HTTPError from "@/utils/error/HTTPError";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { omit } from "underscore";
-import z from "zod";
-import { handleServiceError, parseIdParams } from ".";
+import { handleServiceError } from ".";
 
 export default class ServiceService {
   private serviceRepository: ServiceRepository | undefined;
   private providerRepository: UserRepository | undefined;
   private categoryRepository: CategoryRepository | undefined;
+  private readonly parser = new ServiceParser();
 
   async createService(request: FastifyRequest, reply: FastifyReply) {
     this.serviceRepository = new ServiceRepository();
@@ -24,7 +25,7 @@ export default class ServiceService {
       if (!provider)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Provider not found");
       const { categoryName, ...parsedService } =
-        parseBodyForCreateService(request);
+        this.parser.parseBodyForCreation(request);
       const categoryToLink = await this.categoryRepository.getByName(
         categoryName
       );
@@ -83,7 +84,7 @@ export default class ServiceService {
   async getPublicProjectById(request: FastifyRequest, reply: FastifyReply) {
     this.serviceRepository = new ServiceRepository();
     try {
-      const { id: serviceId } = parseIdParams(request);
+      const { id: serviceId } = this.parser.parseIdFromParams(request);
       const service = await this.serviceRepository.getById(serviceId);
       this.serviceRepository.close();
       if (!service)
@@ -110,7 +111,7 @@ export default class ServiceService {
       this.providerRepository.close();
       if (!provider)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Provider not found");
-      const { id: serviceId } = parseIdParams(request);
+      const { id: serviceId } = this.parser.parseIdFromParams(request);
       const service = await this.serviceRepository.getByIdFromOwner(
         serviceId,
         provider.id
@@ -139,7 +140,7 @@ export default class ServiceService {
       this.providerRepository.close();
       if (!provider)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Provider not found");
-      const { id: serviceId } = parseIdParams(request);
+      const { id: serviceId } = this.parser.parseIdFromParams(request);
       const service = await this.serviceRepository.getByIdFromOwner(
         serviceId,
         provider.id
@@ -157,18 +158,4 @@ export default class ServiceService {
       );
     }
   }
-}
-
-function parseBodyForCreateService(request: FastifyRequest) {
-  const bodySchema = z.object({
-    title: z.string().min(3),
-    description: z.string().min(3),
-    bannerImageURL: z.string().url().optional(),
-    featuredImagesURL: z.array(z.string().url()).optional().default([]),
-    minimumPrice: z.number().int().min(0),
-    isHighlighted: z.boolean(),
-    categoryName: z.string().min(3).max(255),
-  });
-  const parsedBody = bodySchema.parse(request.body);
-  return parsedBody;
 }
