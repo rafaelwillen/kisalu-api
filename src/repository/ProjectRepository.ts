@@ -63,4 +63,11 @@ export default class ProjectRepository extends Repository {
     });
     return projects;
   }
+
+  async delete(id: string) {
+    const project = await this.prisma.project.delete({
+      where: { id },
+    });
+    return project;
+  }
 }

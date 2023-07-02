@@ -13,5 +13,6 @@ export default function servicesRoutes(
   app.post("/", serviceService.createService);
   app.get("/", serviceService.getAllFromProvider);
   app.get("/:id", serviceService.getSingleServiceFromProvider);
+  app.delete("/:id", serviceService.deleteService);
   done();
 }

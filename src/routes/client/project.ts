@@ -14,5 +14,6 @@ export default function projectsRoutes(
   app.put("/:id/available", projectService.changeProjectState);
   app.get("/", projectService.getAllFromClient);
   app.get("/:id", projectService.getSingleProjectFromClient);
+  app.delete("/:id", projectService.deleteProject);
   done();
 }

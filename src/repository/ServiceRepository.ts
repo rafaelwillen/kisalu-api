@@ -48,4 +48,11 @@ export default class ServiceRepository extends Repository {
     });
     return services;
   }
+
+  async delete(id: string) {
+    const service = await this.prisma.service.delete({
+      where: { id },
+    });
+    return service;
+  }
 }

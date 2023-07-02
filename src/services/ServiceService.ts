@@ -129,6 +129,34 @@ export default class ServiceService {
       );
     }
   }
+
+  async deleteService(request: FastifyRequest, reply: FastifyReply) {
+    this.serviceRepository = new ServiceRepository();
+    this.providerRepository = new UserRepository();
+    try {
+      const { email } = request.user;
+      const provider = await this.providerRepository.getByEmail(email);
+      this.providerRepository.close();
+      if (!provider)
+        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Provider not found");
+      const { id: serviceId } = parseIdParams(request);
+      const service = await this.serviceRepository.getByIdFromOwner(
+        serviceId,
+        provider.id
+      );
+      if (!service)
+        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Service not found");
+      await this.serviceRepository.delete(serviceId);
+      this.serviceRepository.close();
+      return reply.send();
+    } catch (error) {
+      handleServiceError(
+        error,
+        [this.serviceRepository, this.providerRepository],
+        reply
+      );
+    }
+  }
 }
 
 function parseBodyForCreateService(request: FastifyRequest) {

@@ -160,6 +160,34 @@ export default class ProjectService {
       );
     }
   }
+
+  async deleteProject(request: FastifyRequest, reply: FastifyReply) {
+    this.projectRepository = new ProjectRepository();
+    this.clientRepository = new UserRepository();
+    try {
+      const { email } = request.user;
+      const client = await this.clientRepository.getByEmail(email);
+      this.clientRepository.close();
+      if (!client)
+        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Client not found");
+      const { id: projectId } = parseIdParams(request);
+      const project = await this.projectRepository.getByIdFromOwner(
+        projectId,
+        client.id
+      );
+      if (!project)
+        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Project not found");
+      await this.projectRepository.delete(projectId);
+      this.projectRepository.close();
+      return reply.send();
+    } catch (error) {
+      handleServiceError(
+        error,
+        [this.projectRepository, this.clientRepository],
+        reply
+      );
+    }
+  }
 }
 
 function parseBodyForCreateProject(request: FastifyRequest) {
