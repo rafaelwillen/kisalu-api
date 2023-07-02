@@ -65,7 +65,7 @@ export default class ProjectService {
       if (!client)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Client not found");
       const { id: projectId } = parseIdParams(request);
-      const project = await this.projectRepository.getById(
+      const project = await this.projectRepository.getByIdFromOwner(
         projectId,
         client.id
       );
@@ -108,6 +108,56 @@ export default class ProjectService {
         );
     } catch (error) {
       handleServiceError(error, [this.clientRepository], reply);
+    }
+  }
+
+  async getPublicProjectById(request: FastifyRequest, reply: FastifyReply) {
+    this.projectRepository = new ProjectRepository();
+    try {
+      const { id: projectId } = parseIdParams(request);
+      const project = await this.projectRepository.getById(projectId);
+      this.projectRepository.close();
+      if (!project)
+        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Project not found");
+      if (project.state === "Draft")
+        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Project not found");
+      return reply
+        .code(HTTP_STATUS_CODE.OK)
+        .send(omit(project, "userId", "categoryId"));
+    } catch (error) {
+      handleServiceError(error, [this.projectRepository], reply);
+    }
+  }
+
+  async getSingleProjectFromClient(
+    request: FastifyRequest,
+    reply: FastifyReply
+  ) {
+    this.projectRepository = new ProjectRepository();
+    this.clientRepository = new UserRepository();
+    try {
+      const { email } = request.user;
+      const client = await this.clientRepository.getByEmail(email);
+      this.clientRepository.close();
+      if (!client)
+        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Client not found");
+      const { id: projectId } = parseIdParams(request);
+      const project = await this.projectRepository.getByIdFromOwner(
+        projectId,
+        client.id
+      );
+      this.projectRepository.close();
+      if (!project)
+        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Project not found");
+      return reply
+        .code(HTTP_STATUS_CODE.OK)
+        .send(omit(project, "userId", "categoryId"));
+    } catch (error) {
+      handleServiceError(
+        error,
+        [this.projectRepository, this.clientRepository],
+        reply
+      );
     }
   }
 }

@@ -27,7 +27,10 @@ export default class ProjectRepository extends Repository {
     return updatedProject;
   }
 
-  async getById(projectId: string, ownerId: string): Promise<Project | null> {
+  async getByIdFromOwner(
+    projectId: string,
+    ownerId: string
+  ): Promise<Project | null> {
     const project = await this.prisma.user.findUnique({
       where: { id: ownerId },
       select: {
@@ -38,6 +41,13 @@ export default class ProjectRepository extends Repository {
     });
     if (!project) return null;
     return project.projects[0];
+  }
+
+  async getById(projectId: string): Promise<Project | null> {
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+    });
+    return project;
   }
 
   async getAllByOwnerId(ownerId: string) {

@@ -13,5 +13,6 @@ export default function projectsRoutes(
   app.post("/", projectService.createProject);
   app.put("/:id/available", projectService.changeProjectState);
   app.get("/", projectService.getAllFromClient);
+  app.get("/:id", projectService.getSingleProjectFromClient);
   done();
 }

@@ -200,6 +200,25 @@ export default class CategoryService {
       handleServiceError(error, [this.categoryRepository], reply);
     }
   }
+
+  async getProjectsByCategory(request: FastifyRequest, reply: FastifyReply) {
+    this.categoryRepository = new CategoryRepository();
+    try {
+      const { id } = parseIdParams(request);
+      const category = await this.categoryRepository.getSingle(id);
+      this.categoryRepository.close();
+      if (!category)
+        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Category not found");
+      const { projects } = category;
+      return reply.send(
+        projects
+          .map((project) => omit(project, "categoryId", "userId"))
+          .filter((project) => project.state !== "Draft")
+      );
+    } catch (error) {
+      handleServiceError(error, [this.categoryRepository], reply);
+    }
+  }
 }
 
 function parseBodyForCreateCategory(request: FastifyRequest) {
