@@ -28,7 +28,7 @@ export default class UploadService {
         throw new HTTPError(HTTP_STATUS_CODE.BAD_REQUEST, "Invalid file type");
       const extension = extname(data.filename);
       const fileName = randomUUID().concat(`_${storage}${extension}`);
-      const url = await upload(
+      const url = await this.upload(
         `images/${storage}/${fileName}`,
         data.mimetype,
         await data.toBuffer()
@@ -46,24 +46,24 @@ export default class UploadService {
       const { filename } = this.parser.parseFilenameParams(request);
       const firebaseStoragePath = filename.split("_")[1].split(".")[0];
       const ref = `images/${firebaseStoragePath}/${filename}`;
-      await deleteFile(ref);
+      await this.deleteFile(ref);
       reply.send();
     } catch (error) {
       handleUploadError(error, reply);
     }
   }
-}
 
-async function upload(path: string, contentType: string, data: Buffer) {
-  const fileRef = ref(storage, path);
-  await uploadBytes(fileRef, data, {
-    contentType,
-  });
-  const url = await getDownloadURL(fileRef);
-  return url;
-}
+  private async upload(path: string, contentType: string, data: Buffer) {
+    const fileRef = ref(storage, path);
+    await uploadBytes(fileRef, data, {
+      contentType,
+    });
+    const url = await getDownloadURL(fileRef);
+    return url;
+  }
 
-async function deleteFile(path: string) {
-  const fileRef = ref(storage, path);
-  await deleteObject(fileRef);
+  private async deleteFile(path: string) {
+    const fileRef = ref(storage, path);
+    await deleteObject(fileRef);
+  }
 }
