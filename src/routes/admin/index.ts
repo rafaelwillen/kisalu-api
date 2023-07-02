@@ -10,32 +10,30 @@ export default function adminRoutes(
 ) {
   const adminService = new AdministratorService();
 
-  app.post("/", adminService.createAdministrator);
+  app.post("/", (req, rep) => adminService.createAdministrator(req, rep));
   app.get(
     "/",
     {
       onRequest: [useEnsureAdminIsAuthenticated],
     },
-    adminService.getAllAdministrators
+    (req, rep) => adminService.getAllAdministrators(req, rep)
   );
-  app.get(
-    "/:id",
-    { onRequest: [useEnsureAdminIsAuthenticated] },
-    adminService.getSingleAdministrator
+  app.get("/:id", { onRequest: [useEnsureAdminIsAuthenticated] }, (req, rep) =>
+    adminService.getSingleAdministrator(req, rep)
   );
   app.delete(
     "/",
     {
       onRequest: [useEnsureAdminIsAuthenticated],
     },
-    adminService.deleteAdmin
+    (req, rep) => adminService.deleteAdmin(req, rep)
   );
   app.put(
     "/:id",
     {
       onRequest: [useEnsureAdminIsAuthenticated],
     },
-    adminService.updateAdministrator
+    (req, rep) => adminService.updateAdministrator(req, rep)
   );
 
   // Categories routes

@@ -9,15 +9,21 @@ export default async function authenticationRoutes(
 ) {
   const authenticationService = new AuthenticationService();
 
-  app.get("/me", authenticationService.getCurrentAuthenticatedUser);
-  app.post("/login/admin", authenticationService.authenticateAdministrator);
-  app.post("/login", authenticationService.authenticateUser);
+  app.get("/me", (req, rep) =>
+    authenticationService.getCurrentAuthenticatedUser(req, rep)
+  );
+  app.post("/login/admin", (req, rep) =>
+    authenticationService.authenticateAdministrator(req, rep)
+  );
+  app.post("/login", (req, rep) =>
+    authenticationService.authenticateUser(req, rep)
+  );
   app.put(
     "/password-reset/admin",
     {
       onRequest: [useEnsureAdminIsAuthenticated],
     },
-    authenticationService.resetAdministratorPassword
+    (req, rep) => authenticationService.resetAdministratorPassword(req, rep)
   );
   done();
 }
