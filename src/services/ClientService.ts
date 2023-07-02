@@ -14,7 +14,7 @@ export class ClientService {
     this.clientRepository = new UserRepository();
     try {
       const { password, email, phoneNumber, ...userData } =
-        this.parser.parseBodyForClientCreation(request);
+        this.parser.parseBodyForUserCreation(request);
       const userWithEmail = await this.clientRepository.getByEmail(email);
       if (userWithEmail)
         throw new HTTPError(

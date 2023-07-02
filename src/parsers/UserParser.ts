@@ -6,7 +6,7 @@ import z from "zod";
 import BaseParser from "./BaseParser";
 
 export default class UserParser extends BaseParser {
-  parseBodyForClientCreation(request: FastifyRequest) {
+  parseBodyForUserCreation(request: FastifyRequest) {
     const schema = z
       .object({
         firstName: z.string().min(3).regex(noSymbolRegex, "No symbols allowed"),
