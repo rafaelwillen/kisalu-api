@@ -120,7 +120,16 @@ export default class UserRepository extends Repository {
         clientActivities: true,
         disputes: true,
         reviews: true,
-        projects: true,
+        projects: {
+          include: {
+            category: {
+              select: {
+                name: true,
+                slug: true,
+              },
+            },
+          },
+        },
       },
     });
     if (!client) return null;
