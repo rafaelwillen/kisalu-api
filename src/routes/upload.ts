@@ -13,5 +13,7 @@ export default async function uploadRoutes(
   app.delete("/avatar/:filename", uploadService.deleteAvatarImage);
   app.post("/project", uploadService.uploadProjectImage);
   app.delete("/project/:filename", uploadService.deleteProjectImage);
+  app.post("/service", uploadService.uploadServiceImage);
+  app.delete("/service/:filename", uploadService.deleteServiceImage);
   done();
 }
