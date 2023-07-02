@@ -1,15 +1,16 @@
 import { signJWT, verifyJWT } from "@/configs/jwt";
 import { HTTP_STATUS_CODE } from "@/constants";
 import { comparePasswords, hashPassword } from "@/lib/passwordHashing";
+import AuthenticationParser from "@/parsers/AuthenticationParser";
 import { AuthRepository } from "@/repository/AuthRepository";
 import HTTPError from "@/utils/error/HTTPError";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { omit } from "underscore";
-import z from "zod";
 import { handleServiceError } from ".";
 
 export default class AuthenticationService {
   private authenticationRepository: AuthRepository | undefined;
+  private readonly parser = new AuthenticationParser();
 
   async authenticateAdministrator(
     request: FastifyRequest,
@@ -17,7 +18,7 @@ export default class AuthenticationService {
   ) {
     this.authenticationRepository = new AuthRepository();
     try {
-      const parsedUserBody = parseBodyForAuthentication(request);
+      const parsedUserBody = this.parser.parseBodyForAuthentication(request);
       const userAuthData = await this.authenticationRepository.getByEmail(
         parsedUserBody.email
       );
@@ -100,7 +101,8 @@ export default class AuthenticationService {
           HTTP_STATUS_CODE.FORBIDDEN,
           "You are not allowed to perform this action"
         );
-      const { newPassword, email } = parsePasswordResetBody(request);
+      const { newPassword, email } =
+        this.parser.parsePasswordResetBody(request);
       const userAuthData = await this.authenticationRepository.getByEmail(
         email
       );
@@ -124,7 +126,7 @@ export default class AuthenticationService {
   async authenticateUser(request: FastifyRequest, reply: FastifyReply) {
     this.authenticationRepository = new AuthRepository();
     try {
-      const parsedUserBody = parseBodyForAuthentication(request);
+      const parsedUserBody = this.parser.parseBodyForAuthentication(request);
       const userAuthData = await this.authenticationRepository.getByEmail(
         parsedUserBody.email
       );
@@ -160,20 +162,4 @@ export default class AuthenticationService {
       handleServiceError(error, [this.authenticationRepository], reply);
     }
   }
-}
-
-function parseBodyForAuthentication(request: FastifyRequest) {
-  const schema = z.object({
-    email: z.string().email(),
-    password: z.string().min(8),
-  });
-  return schema.parse(request.body);
-}
-
-function parsePasswordResetBody(request: FastifyRequest) {
-  const schema = z.object({
-    newPassword: z.string().min(8),
-    email: z.string().email(),
-  });
-  return schema.parse(request.body);
 }
