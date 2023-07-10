@@ -1,4 +1,4 @@
-import { DEFAULT_USER_AVATAR_API_URL, HTTP_STATUS_CODE } from "@/constants";
+import { HTTP_STATUS_CODE } from "@/constants";
 import { hashPassword } from "@/lib/passwordHashing";
 import UserParser from "@/parsers/UserParser";
 import { AuthRepository } from "@/repository/AuthRepository";
@@ -63,34 +63,6 @@ export class ProviderService {
       const { id: userId } = user.User!;
       const updatedProvider =
         await this.providerRepository.updateProviderAvatarImageURL(url, userId);
-      this.providerRepository.close();
-      const { avatarImageURL } = updatedProvider;
-      reply.code(HTTP_STATUS_CODE.OK).send({
-        avatarImageURL,
-      });
-    } catch (error) {
-      handleServiceError(error, [this.providerRepository], reply);
-    }
-  }
-
-  async resetProviderAvatarImage(request: FastifyRequest, reply: FastifyReply) {
-    this.providerRepository = new UserRepository();
-    this.authRepository = new AuthRepository();
-    try {
-      const { email } = request.user;
-      const user = await this.authRepository.getByEmail(email);
-      this.authRepository.close();
-      if (!user)
-        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "User not found");
-      const { id: userId, firstName, lastName } = user.User!;
-      const avatarImageURLToReset = DEFAULT_USER_AVATAR_API_URL.concat(
-        `/seed=${firstName}${lastName}`
-      );
-      const updatedProvider =
-        await this.providerRepository.updateProviderAvatarImageURL(
-          avatarImageURLToReset,
-          userId
-        );
       this.providerRepository.close();
       const { avatarImageURL } = updatedProvider;
       reply.code(HTTP_STATUS_CODE.OK).send({
