@@ -16,3 +16,6 @@ export const HTTP_STATUS_CODE = {
 };
 
 export const ADULT_DATE_OF_BIRTH = subYears(new Date(), 17);
+
+export const DEFAULT_USER_AVATAR_API_URL =
+  "https://api.dicebear.com/6.x/notionists/png";
