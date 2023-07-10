@@ -65,21 +65,14 @@ export default class CategoryRepository extends Repository {
     return category;
   }
 
-  async getBySlug(slug: string): Promise<CompleteCategoryType | null> {
+  async getBySlug(
+    slug: string
+  ): Promise<Omit<CompleteCategoryType, "admin"> | null> {
     const category = await this.prisma.category.findUnique({
       where: { slug },
       include: {
         services: true,
         projects: true,
-        admin: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            avatarImageURL: true,
-            gender: true,
-          },
-        },
       },
     });
     return category;

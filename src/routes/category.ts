@@ -21,5 +21,6 @@ export default async function categoryRoutes(
   app.get("/:id/services", (req, rep) =>
     categoryService.getServicesByCategory(req, rep)
   );
+  app.get("/:slug", (req, rep) => categoryService.getCategoryBySlug(req, rep));
   done();
 }
