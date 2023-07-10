@@ -35,4 +35,11 @@ export default class UserParser extends BaseParser {
       });
     return schema.parse(request.body);
   }
+
+  parseBodyForImageUpdate(request: FastifyRequest) {
+    const schema = z.object({
+      url: z.string().url(),
+    });
+    return schema.parse(request.body);
+  }
 }

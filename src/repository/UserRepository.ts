@@ -47,6 +47,16 @@ export default class UserRepository extends Repository {
     super();
   }
 
+  async updateProviderAvatarImageURL(url: string, id: string) {
+    const updatedProvider = await this.prisma.user.update({
+      where: { id },
+      data: {
+        avatarImageURL: url,
+      },
+    });
+    return updatedProvider;
+  }
+
   async createClient(data: CreatableUser) {
     const newClient = await this.prisma.user.create({
       data: {
