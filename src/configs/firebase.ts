@@ -13,3 +13,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 export const storage = getStorage(app);
+
+export const firebaseStorageAcceptableParams = [
+  "category",
+  "avatar",
+  "project",
+  "service",
+];

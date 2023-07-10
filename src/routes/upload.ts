@@ -7,8 +7,11 @@ export default async function uploadRoutes(
   done: () => void
 ) {
   const uploadService = new UploadService();
-  app.post("/category", uploadService.uploadCategoryImage);
-  app.delete("/category/:filename", uploadService.deleteCategoryImage);
-
+  app.post("/image/:storage", (req, rep) =>
+    uploadService.uploadImage(req, rep)
+  );
+  app.delete("/image/:filename", (req, rep) =>
+    uploadService.deleteImage(req, rep)
+  );
   done();
 }

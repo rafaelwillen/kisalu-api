@@ -1,14 +1,15 @@
 import { HTTP_STATUS_CODE } from "@/constants";
+import AddressParser from "@/parsers/AddressParser";
 import {
   getAllCountiesFromProvince,
   getAllProvinces,
 } from "@/utils/angolaSubdivisions";
 import HTTPError from "@/utils/error/HTTPError";
-import { noSymbolRegex } from "@/utils/regex";
 import { FastifyReply, FastifyRequest } from "fastify";
-import z from "zod";
 
 export class AddressService {
+  private readonly parser = new AddressParser();
+
   async getAllProvinces(request: FastifyRequest, reply: FastifyReply) {
     const provinces = getAllProvinces();
     return reply.send(provinces);
@@ -19,7 +20,7 @@ export class AddressService {
     reply: FastifyReply
   ) {
     try {
-      const { province } = parseProvinceParams(request);
+      const { province } = this.parser.parseProvinceFromParams(request);
       const counties = getAllCountiesFromProvince(province);
       return reply.send(counties);
     } catch (error) {
@@ -31,9 +32,3 @@ export class AddressService {
   }
 }
 
-function parseProvinceParams(request: FastifyRequest) {
-  const schema = z.object({
-    province: z.string().min(3).regex(noSymbolRegex, "Invalid province name"),
-  });
-  return schema.parse(request.params);
-}

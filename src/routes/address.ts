@@ -8,7 +8,9 @@ export default async function addressRoutes(
 ) {
   const addressService = new AddressService();
 
-  app.get("/province", addressService.getAllProvinces);
-  app.get("/county/:province", addressService.getAllCountiesFromProvince);
+  app.get("/province", (req, rep) => addressService.getAllProvinces(req, rep));
+  app.get("/county/:province", (req, rep) =>
+    addressService.getAllCountiesFromProvince(req, rep)
+  );
   done();
 }

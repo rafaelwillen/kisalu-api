@@ -1,5 +1,6 @@
 import { storage } from "@/configs/firebase";
 import { HTTP_STATUS_CODE } from "@/constants";
+import UploadParser from "@/parsers/UploadParser";
 import HTTPError from "@/utils/error/HTTPError";
 import { imageMimetypeRegex } from "@/utils/regex";
 import { FastifyReply, FastifyRequest } from "fastify";
@@ -11,22 +12,24 @@ import {
 } from "firebase/storage";
 import { randomUUID } from "node:crypto";
 import { extname } from "node:path";
-import z from "zod";
 import { handleUploadError } from ".";
 
 export default class UploadService {
-  async uploadCategoryImage(request: FastifyRequest, reply: FastifyReply) {
+  private readonly parser = new UploadParser();
+
+  async uploadImage(request: FastifyRequest, reply: FastifyReply) {
     const data = await request.file();
-    if (!data)
-      throw new HTTPError(HTTP_STATUS_CODE.BAD_REQUEST, "No File received");
-    const isValidMimetype = imageMimetypeRegex.test(data.mimetype);
-    if (!isValidMimetype)
-      throw new HTTPError(HTTP_STATUS_CODE.BAD_REQUEST, "Invalid file type");
-    const extension = extname(data.filename);
-    const fileName = randomUUID().concat("_category").concat(extension);
     try {
-      const url = await upload(
-        `images/category/${fileName}`,
+      const { storage } = this.parser.parseStorageLocationFromParams(request);
+      if (!data)
+        throw new HTTPError(HTTP_STATUS_CODE.BAD_REQUEST, "No File received");
+      const isValidMimetype = imageMimetypeRegex.test(data.mimetype);
+      if (!isValidMimetype)
+        throw new HTTPError(HTTP_STATUS_CODE.BAD_REQUEST, "Invalid file type");
+      const extension = extname(data.filename);
+      const fileName = randomUUID().concat(`_${storage}${extension}`);
+      const url = await this.upload(
+        `images/${storage}/${fileName}`,
         data.mimetype,
         await data.toBuffer()
       );
@@ -38,37 +41,29 @@ export default class UploadService {
     }
   }
 
-  async deleteCategoryImage(request: FastifyRequest, reply: FastifyReply) {
+  async deleteImage(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const { filename } = parseFilenameParams(request);
-      const ref = `images/category/${filename}`;
-      await deleteFile(ref);
+      const { filename } = this.parser.parseFilenameParams(request);
+      const firebaseStoragePath = filename.split("_")[1].split(".")[0];
+      const ref = `images/${firebaseStoragePath}/${filename}`;
+      await this.deleteFile(ref);
       reply.send();
     } catch (error) {
       handleUploadError(error, reply);
     }
   }
-}
 
-function parseFilenameParams(request: FastifyRequest) {
-  const schema = z.object({
-    filename: z.string().includes("_category", {
-      message: "Invalid filename",
-    }),
-  });
-  return schema.parse(request.params);
-}
+  private async upload(path: string, contentType: string, data: Buffer) {
+    const fileRef = ref(storage, path);
+    await uploadBytes(fileRef, data, {
+      contentType,
+    });
+    const url = await getDownloadURL(fileRef);
+    return url;
+  }
 
-async function upload(path: string, contentType: string, data: Buffer) {
-  const fileRef = ref(storage, path);
-  await uploadBytes(fileRef, data, {
-    contentType,
-  });
-  const url = await getDownloadURL(fileRef);
-  return url;
-}
-
-async function deleteFile(path: string) {
-  const fileRef = ref(storage, path);
-  await deleteObject(fileRef);
+  private async deleteFile(path: string) {
+    const fileRef = ref(storage, path);
+    await deleteObject(fileRef);
+  }
 }

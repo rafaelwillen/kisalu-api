@@ -10,35 +10,22 @@ export default function adminRoutes(
 ) {
   const adminService = new AdministratorService();
 
-  app.post("/", adminService.createAdministrator);
-  app.get(
-    "/",
-    {
-      onRequest: [useEnsureAdminIsAuthenticated],
-    },
-    adminService.getAllAdministrators
-  );
-  app.get(
-    "/:id",
-    { onRequest: [useEnsureAdminIsAuthenticated] },
-    adminService.getSingleAdministrator
-  );
-  app.delete(
-    "/",
-    {
-      onRequest: [useEnsureAdminIsAuthenticated],
-    },
-    adminService.deleteAdmin
-  );
-  app.put(
-    "/:id",
-    {
-      onRequest: [useEnsureAdminIsAuthenticated],
-    },
-    adminService.updateAdministrator
-  );
+  app.post("/", (req, rep) => adminService.createAdministrator(req, rep));
+  app.register(privateRoutes);
 
   // Categories routes
   app.register(adminCategoriesRoutes, { prefix: "/category" });
+  done();
+}
+
+function privateRoutes(app: FastifyInstance, options: any, done: () => void) {
+  const adminService = new AdministratorService();
+
+  app.addHook("onRequest", useEnsureAdminIsAuthenticated);
+
+  app.get("/", (req, rep) => adminService.getAllAdministrators(req, rep));
+  app.get("/:id", (req, rep) => adminService.getSingleAdministrator(req, rep));
+  app.delete("/", (req, rep) => adminService.deleteAdmin(req, rep));
+  app.put("/:id", (req, rep) => adminService.updateAdministrator(req, rep));
   done();
 }

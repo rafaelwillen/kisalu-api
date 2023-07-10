@@ -65,21 +65,14 @@ export default class CategoryRepository extends Repository {
     return category;
   }
 
-  async getBySlug(slug: string): Promise<CompleteCategoryType | null> {
+  async getBySlug(
+    slug: string
+  ): Promise<Omit<CompleteCategoryType, "admin"> | null> {
     const category = await this.prisma.category.findUnique({
       where: { slug },
       include: {
         services: true,
         projects: true,
-        admin: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            avatarImageURL: true,
-            gender: true,
-          },
-        },
       },
     });
     return category;
@@ -104,5 +97,51 @@ export default class CategoryRepository extends Repository {
       where: { name },
     });
     return category;
+  }
+
+  async getPopular() {
+    const numberOfPopularCategories = 12;
+    // TODO: When the app grows, implement a better way to get popular categories
+    const popularCategories = await this.prisma.category.findMany({
+      take: numberOfPopularCategories,
+      orderBy: [
+        {
+          services: {
+            _count: "desc",
+          },
+        },
+        {
+          projects: {
+            _count: "desc",
+          },
+        },
+        {
+          name: "asc",
+        },
+      ],
+      select: {
+        _count: true,
+        name: true,
+        slug: true,
+      },
+    });
+    return popularCategories;
+  }
+
+  async getAverageRating(id: string) {
+    throw new Error("Method not implemented.");
+  }
+
+  queryByName(name: string) {
+    const foundCategories = this.prisma.category.findMany({
+      where: {
+        name: {
+          contains: name,
+          mode: "insensitive",
+        },
+      },
+      orderBy: { name: "asc" },
+    });
+    return foundCategories;
   }
 }
