@@ -5,7 +5,7 @@ import AuthenticationParser from "@/parsers/AuthenticationParser";
 import { AuthRepository } from "@/repository/AuthRepository";
 import HTTPError from "@/utils/error/HTTPError";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { omit } from "underscore";
+import { omit, pick } from "underscore";
 import { handleServiceError } from ".";
 
 export default class AuthenticationService {
@@ -75,7 +75,12 @@ export default class AuthenticationService {
         updatedAt,
         createdAt,
         email,
-        ...omit(User, "id", "loginId"),
+        ...omit(User, "id", "loginId", "address"),
+        address: User?.address
+          ? {
+              ...pick(User?.address, "county", "province", "addressLine"),
+            }
+          : null,
       });
     } catch (error) {
       handleServiceError(error, reply);
@@ -147,7 +152,15 @@ export default class AuthenticationService {
           email,
           role,
           createdAt,
-          ...omit(User, "id", "loginId", "biography", "birthDate", "gender"),
+          ...omit(
+            User,
+            "id",
+            "loginId",
+            "biography",
+            "birthDate",
+            "gender",
+            "address"
+          ),
         },
       });
     } catch (error) {
