@@ -1,4 +1,4 @@
-import { Gender, User } from "@prisma/client";
+import { Gender } from "@prisma/client";
 import Repository from "./Repository";
 
 export type CreatableUser = {
@@ -46,11 +46,15 @@ export default class UserRepository extends Repository {
     return updatedProvider;
   }
 
-  async getByEmail(email: string): Promise<User | null> {
+  async getByEmail(email: string) {
     const userAuth = await this.prisma.auth.findUnique({
       where: { email },
       include: {
-        User: true,
+        User: {
+          include: {
+            address: true,
+          },
+        },
       },
     });
     if (!userAuth) return null;

@@ -12,7 +12,7 @@ export default function providerRoutes(
 
   app.post("/", (req, rep) => providerService.createProvider(req, rep));
   app.put("/avatar", { onRequest: useUserIsProvider }, (req, rep) =>
-    providerService.updateProviderAvatarImage(req, rep)
+    providerService.updateUserAvatarImage(req, rep)
   );
   app.register(servicesRoutes, { prefix: "/services" });
   done();
