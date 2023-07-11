@@ -1,6 +1,7 @@
 import { HTTP_STATUS_CODE } from "@/constants";
 import CategoryParser from "@/parsers/CategoryParser";
-import { AdministratorRepository, CategoryRepository } from "@/repository";
+import AdministratorRepository from "@/repository/AdministratorRepository";
+import CategoryRepository from "@/repository/CategoryRepository";
 import { slugifyName } from "@/utils";
 import HTTPError from "@/utils/error/HTTPError";
 import { FastifyReply, FastifyRequest } from "fastify";
@@ -8,11 +9,10 @@ import { omit } from "underscore";
 import { handleServiceError } from ".";
 
 export default class CategoryService {
-  private categoryRepository: CategoryRepository | undefined;
+  private categoryRepository = new CategoryRepository();
   private readonly parser = new CategoryParser();
 
   async createCategory(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryRepository = new CategoryRepository();
     const administratorRepository = new AdministratorRepository();
     try {
       const { email } = request.user;
@@ -41,7 +41,6 @@ export default class CategoryService {
   }
 
   async getAllCategories(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryRepository = new CategoryRepository();
     try {
       const categories = await this.categoryRepository.getAll();
       // TODO: Find a way to get the average rating of each category
@@ -74,7 +73,6 @@ export default class CategoryService {
     request: FastifyRequest,
     reply: FastifyReply
   ) {
-    this.categoryRepository = new CategoryRepository();
     try {
       const categories = await this.categoryRepository.getAll();
       const parsedCategories = categories.map(
@@ -98,7 +96,6 @@ export default class CategoryService {
   }
 
   async getCategoryByID(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryRepository = new CategoryRepository();
     try {
       const { id } = this.parser.parseIdFromParams(request);
       const category = await this.categoryRepository.getSingle(id);
@@ -111,7 +108,6 @@ export default class CategoryService {
   }
 
   async getCategoryBySlug(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryRepository = new CategoryRepository();
     try {
       const { slug } = this.parser.parseSlugFromParams(request);
       const category = await this.categoryRepository.getBySlug(slug);
@@ -124,7 +120,6 @@ export default class CategoryService {
   }
 
   async deleteCategory(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryRepository = new CategoryRepository();
     try {
       const { id } = this.parser.parseIdFromParams(request);
       await this.categoryRepository.delete(id);
@@ -135,7 +130,6 @@ export default class CategoryService {
   }
 
   async updateCategory(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryRepository = new CategoryRepository();
     try {
       const { id } = this.parser.parseIdFromParams(request);
       const parsedCategoryBody = this.parser.parseBodyForCreation(request);
@@ -158,7 +152,6 @@ export default class CategoryService {
   }
 
   async getPopularCategories(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryRepository = new CategoryRepository();
     try {
       const categories = await this.categoryRepository.getPopular();
       const categoriesResponse = categories.map(({ _count, ...rest }) => ({
@@ -173,7 +166,6 @@ export default class CategoryService {
   }
 
   async queryCategoriesByName(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryRepository = new CategoryRepository();
     try {
       const { name } = this.parser.parseSearchQuery(request);
       const categories = await this.categoryRepository.queryByName(name);
@@ -189,7 +181,6 @@ export default class CategoryService {
   }
 
   async getProjectsByCategory(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryRepository = new CategoryRepository();
     try {
       const { id } = this.parser.parseIdFromParams(request);
       const category = await this.categoryRepository.getSingle(id);
@@ -207,7 +198,6 @@ export default class CategoryService {
   }
 
   async getServicesByCategory(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryRepository = new CategoryRepository();
     try {
       const { id } = this.parser.parseIdFromParams(request);
       const category = await this.categoryRepository.getSingle(id);

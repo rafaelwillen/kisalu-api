@@ -9,14 +9,13 @@ import { omit } from "underscore";
 import { handleServiceError } from ".";
 
 export default class AuthenticationService {
-  private authenticationRepository: AuthRepository | undefined;
+  private authenticationRepository = new AuthRepository();
   private readonly parser = new AuthenticationParser();
 
   async authenticateAdministrator(
     request: FastifyRequest,
     reply: FastifyReply
   ) {
-    this.authenticationRepository = new AuthRepository();
     try {
       const parsedUserBody = this.parser.parseBodyForAuthentication(request);
       const userAuthData = await this.authenticationRepository.getByEmail(
@@ -58,7 +57,6 @@ export default class AuthenticationService {
     request: FastifyRequest,
     reply: FastifyReply
   ) {
-    this.authenticationRepository = new AuthRepository();
     try {
       const { email } = await verifyJWT(request);
       const authData = await this.authenticationRepository.getByEmail(email);
@@ -88,7 +86,6 @@ export default class AuthenticationService {
     request: FastifyRequest,
     reply: FastifyReply
   ) {
-    this.authenticationRepository = new AuthRepository();
     const mainAdminsEmails = [
       "rafaelpadre@gmail.com",
       "rafael.padre@kisalu.com",
@@ -121,7 +118,6 @@ export default class AuthenticationService {
   }
 
   async authenticateUser(request: FastifyRequest, reply: FastifyReply) {
-    this.authenticationRepository = new AuthRepository();
     try {
       const parsedUserBody = this.parser.parseBodyForAuthentication(request);
       const userAuthData = await this.authenticationRepository.getByEmail(

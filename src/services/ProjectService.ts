@@ -1,23 +1,20 @@
 import { HTTP_STATUS_CODE } from "@/constants";
 import ProjectParser from "@/parsers/ProjectParser";
-import { CategoryRepository } from "@/repository";
+import CategoryRepository from "@/repository/CategoryRepository";
+import { ClientRepository } from "@/repository/ClientRepostory";
 import ProjectRepository from "@/repository/ProjectRepository";
-import UserRepository from "@/repository/UserRepository";
 import HTTPError from "@/utils/error/HTTPError";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { omit } from "underscore";
 import { handleServiceError } from ".";
 
 export default class ProjectService {
-  private projectRepository: ProjectRepository | undefined;
-  private clientRepository: UserRepository | undefined;
-  private categoryRepository: CategoryRepository | undefined;
+  private projectRepository = new ProjectRepository();
+  private clientRepository = new ClientRepository();
+  private categoryRepository = new CategoryRepository();
   private readonly parser = new ProjectParser();
 
   async createProject(request: FastifyRequest, reply: FastifyReply) {
-    this.projectRepository = new ProjectRepository();
-    this.clientRepository = new UserRepository();
-    this.categoryRepository = new CategoryRepository();
     try {
       const { email } = request.user;
       const client = await this.clientRepository.getByEmail(email);
@@ -46,8 +43,6 @@ export default class ProjectService {
   }
 
   async changeProjectState(request: FastifyRequest, reply: FastifyReply) {
-    this.projectRepository = new ProjectRepository();
-    this.clientRepository = new UserRepository();
     try {
       const { id, state } = await this.getProjectFromUser(request);
       const updatedProject = await this.projectRepository.toggleToAvailable(
@@ -63,7 +58,6 @@ export default class ProjectService {
   }
 
   async getAllFromClient(request: FastifyRequest, reply: FastifyReply) {
-    this.clientRepository = new UserRepository();
     try {
       const { email } = request.user;
       const userExists = await this.clientRepository.getByEmail(email);
@@ -85,7 +79,6 @@ export default class ProjectService {
   }
 
   async getPublicProjectById(request: FastifyRequest, reply: FastifyReply) {
-    this.projectRepository = new ProjectRepository();
     try {
       const { id: projectId } = this.parser.parseIdFromParams(request);
       const project = await this.projectRepository.getById(projectId);
@@ -105,8 +98,6 @@ export default class ProjectService {
     request: FastifyRequest,
     reply: FastifyReply
   ) {
-    this.projectRepository = new ProjectRepository();
-    this.clientRepository = new UserRepository();
     try {
       const { email } = request.user;
       const client = await this.clientRepository.getByEmail(email);
@@ -128,8 +119,6 @@ export default class ProjectService {
   }
 
   async deleteProject(request: FastifyRequest, reply: FastifyReply) {
-    this.projectRepository = new ProjectRepository();
-    this.clientRepository = new UserRepository();
     try {
       const { id } = await this.getProjectFromUser(request);
       await this.projectRepository.delete(id);

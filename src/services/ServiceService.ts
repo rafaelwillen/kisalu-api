@@ -1,23 +1,20 @@
 import { HTTP_STATUS_CODE } from "@/constants";
 import ServiceParser from "@/parsers/ServiceParser";
-import { CategoryRepository } from "@/repository";
+import CategoryRepository from "@/repository/CategoryRepository";
+import { ProviderRepository } from "@/repository/ProviderRepository";
 import ServiceRepository from "@/repository/ServiceRepository";
-import UserRepository from "@/repository/UserRepository";
 import HTTPError from "@/utils/error/HTTPError";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { omit } from "underscore";
 import { handleServiceError } from ".";
 
 export default class ServiceService {
-  private serviceRepository: ServiceRepository | undefined;
-  private providerRepository: UserRepository | undefined;
-  private categoryRepository: CategoryRepository | undefined;
+  private serviceRepository = new ServiceRepository();
+  private providerRepository = new ProviderRepository();
+  private categoryRepository = new CategoryRepository();
   private readonly parser = new ServiceParser();
 
   async createService(request: FastifyRequest, reply: FastifyReply) {
-    this.serviceRepository = new ServiceRepository();
-    this.providerRepository = new UserRepository();
-    this.categoryRepository = new CategoryRepository();
     try {
       const { email } = request.user;
       const provider = await this.providerRepository.getByEmail(email);
@@ -46,7 +43,6 @@ export default class ServiceService {
   }
 
   async getAllFromProvider(request: FastifyRequest, reply: FastifyReply) {
-    this.providerRepository = new UserRepository();
     try {
       const { email } = request.user;
       const userExists = await this.providerRepository.getByEmail(email);
@@ -70,7 +66,6 @@ export default class ServiceService {
   }
 
   async getPublicProjectById(request: FastifyRequest, reply: FastifyReply) {
-    this.serviceRepository = new ServiceRepository();
     try {
       const { id: serviceId } = this.parser.parseIdFromParams(request);
       const service = await this.serviceRepository.getById(serviceId);
@@ -90,8 +85,6 @@ export default class ServiceService {
     request: FastifyRequest,
     reply: FastifyReply
   ) {
-    this.serviceRepository = new ServiceRepository();
-    this.providerRepository = new UserRepository();
     try {
       const { email } = request.user;
       const provider = await this.providerRepository.getByEmail(email);
@@ -113,8 +106,6 @@ export default class ServiceService {
   }
 
   async deleteService(request: FastifyRequest, reply: FastifyReply) {
-    this.serviceRepository = new ServiceRepository();
-    this.providerRepository = new UserRepository();
     try {
       const { email } = request.user;
       const provider = await this.providerRepository.getByEmail(email);

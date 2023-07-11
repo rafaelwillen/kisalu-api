@@ -1,19 +1,19 @@
 import { HTTP_STATUS_CODE } from "@/constants";
 import { hashPassword } from "@/lib/passwordHashing";
 import AdministratorParser from "@/parsers/AdministratoParser";
-import { AdministratorRepository } from "@/repository";
-import { CompleteAdministratorType } from "@/repository/AdministratorRepository";
+import AdministratorRepository, {
+  CompleteAdministratorType,
+} from "@/repository/AdministratorRepository";
 import HTTPError from "@/utils/error/HTTPError";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { omit } from "underscore";
 import { handleServiceError } from ".";
 
 export default class AdministratorService {
-  private administratorRepository: AdministratorRepository | undefined;
+  private administratorRepository = new AdministratorRepository();
   private readonly parser = new AdministratorParser();
 
   async createAdministrator(request: FastifyRequest, reply: FastifyReply) {
-    this.administratorRepository = new AdministratorRepository();
     try {
       const parsedAdminBody = this.parser.parseCreationFromBody(request);
       const { password, email, ...userData } = parsedAdminBody;
@@ -37,10 +37,10 @@ export default class AdministratorService {
   }
 
   async getAllAdministrators(request: FastifyRequest, reply: FastifyReply) {
-    this.administratorRepository = new AdministratorRepository();
     try {
       const administrators = await this.administratorRepository.getAll();
-      const safeAdministrators = cleanGetAllAdministratorsReply(administrators);
+      const safeAdministrators =
+        this.cleanGetAllAdministratorsReply(administrators);
       return reply.code(HTTP_STATUS_CODE.OK).send(safeAdministrators);
     } catch (error) {
       handleServiceError(error, reply);
@@ -48,7 +48,6 @@ export default class AdministratorService {
   }
 
   async getSingleAdministrator(request: FastifyRequest, reply: FastifyReply) {
-    this.administratorRepository = new AdministratorRepository();
     try {
       const { id } = this.parser.parseIdFromParams(request);
       const administrator = await this.administratorRepository.getByID(id);
@@ -60,7 +59,6 @@ export default class AdministratorService {
   }
 
   async deleteAdmin(request: FastifyRequest, reply: FastifyReply) {
-    this.administratorRepository = new AdministratorRepository();
     const mainAdminsEmails = [
       "rafaelpadre@gmail.com",
       "rafael.padre@kisalu.com",
@@ -111,31 +109,31 @@ export default class AdministratorService {
       handleServiceError(error, reply);
     }
   }
+
+  private cleanGetAllAdministratorsReply(
+    administrators: CompleteAdministratorType[]
+  ) {
+    return administrators.map((administrator) => {
+      const parsedData = {
+        ...omit(administrator, "biography", "birthDate", "loginId"),
+        auth: omit(
+          administrator.auth,
+          "id",
+          "phoneNumber",
+          "isActive",
+          "password"
+        ),
+        disputes: administrator.disputes,
+        createdCategories: administrator.createdCategories
+          .map((category) => omit(category, "creatorAdminId"))
+          .sort((a, b) => {
+            if (a.name < b.name) return -1;
+            else if (a.name > b.name) return 1;
+            return 0;
+          }),
+      };
+      return parsedData;
+    });
+  }
 }
 
-
-function cleanGetAllAdministratorsReply(
-  administrators: CompleteAdministratorType[]
-) {
-  return administrators.map((administrator) => {
-    const parsedData = {
-      ...omit(administrator, "biography", "birthDate", "loginId"),
-      auth: omit(
-        administrator.auth,
-        "id",
-        "phoneNumber",
-        "isActive",
-        "password"
-      ),
-      disputes: administrator.disputes,
-      createdCategories: administrator.createdCategories
-        .map((category) => omit(category, "creatorAdminId"))
-        .sort((a, b) => {
-          if (a.name < b.name) return -1;
-          else if (a.name > b.name) return 1;
-          return 0;
-        }),
-    };
-    return parsedData;
-  });
-}

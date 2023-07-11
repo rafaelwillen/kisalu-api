@@ -1,17 +1,16 @@
 import { HTTP_STATUS_CODE } from "@/constants";
 import { hashPassword } from "@/lib/passwordHashing";
 import UserParser from "@/parsers/UserParser";
-import UserRepository from "@/repository/UserRepository";
+import { ClientRepository } from "@/repository/ClientRepostory";
 import HTTPError from "@/utils/error/HTTPError";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { handleServiceError } from ".";
 
 export class ClientService {
-  private clientRepository: UserRepository | undefined;
+  private clientRepository = new ClientRepository();
   private readonly parser = new UserParser();
 
   async createClient(request: FastifyRequest, reply: FastifyReply) {
-    this.clientRepository = new UserRepository();
     try {
       const { password, email, phoneNumber, ...userData } =
         this.parser.parseBodyForUserCreation(request);
