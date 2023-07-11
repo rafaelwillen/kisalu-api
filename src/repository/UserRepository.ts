@@ -27,7 +27,7 @@ export default class UserRepository extends Repository {
         auth: {
           create: {
             ...data.auth,
-            isActive: true,
+            isActive: false,
             role,
           },
         },
