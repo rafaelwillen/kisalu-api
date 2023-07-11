@@ -65,6 +65,7 @@ model User {
   projects           Project[]
   disputes           Dispute[]
   createdCategories  Category[]
+  address            Address?
 }
 
 model Auth {
@@ -82,21 +83,14 @@ model Auth {
 }
 
 model Address {
-  id            String      @id @default(uuid())
-  county        String
-  province      String
-  addressLine   String
-  coordinates   Coordinates @relation(fields: [coordinatesId], references: [id])
-  coordinatesId String      @unique
-  activity      Activity?   @relation(fields: [activityId], references: [id])
-  activityId    String?     @unique
-}
-
-model Coordinates {
-  id        String   @id @default(uuid())
-  latitude  String
-  longitude String
-  Address   Address?
+  id          String    @id @default(uuid())
+  county      String
+  province    String
+  addressLine String
+  activity    Activity? @relation(fields: [activityId], references: [id])
+  activityId  String?   @unique
+  user        User?     @relation(fields: [userId], references: [id])
+  userId      String?   @unique
 }
 
 model Bidding {
