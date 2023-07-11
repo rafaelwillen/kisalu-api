@@ -17,7 +17,6 @@ export default class CategoryService {
     try {
       const { email } = request.user;
       const admin = await administratorRepository.getByEmail(email);
-      administratorRepository.close();
       if (!admin) throw new Error("Administrator not found");
       const parsedCategoryBody = this.parser.parseBodyForCreation(request);
       const categoryExists = await this.categoryRepository.getByName(
@@ -33,16 +32,11 @@ export default class CategoryService {
         creatorAdminId: admin.id,
         slug: slugifyName(parsedCategoryBody.name),
       });
-      this.categoryRepository.close();
       return reply
         .code(HTTP_STATUS_CODE.CREATED)
         .send(omit(createdCategory, "creatorAdminId"));
     } catch (error) {
-      handleServiceError(
-        error,
-        [this.categoryRepository, administratorRepository],
-        reply
-      );
+      handleServiceError(error, reply);
     }
   }
 
@@ -51,7 +45,6 @@ export default class CategoryService {
     try {
       const categories = await this.categoryRepository.getAll();
       // TODO: Find a way to get the average rating of each category
-      this.categoryRepository.close();
       const parsedCategories = categories.map(
         ({ services, projects, ...restOfCategory }) => ({
           ...omit(
@@ -73,7 +66,7 @@ export default class CategoryService {
       );
       return reply.send(parsedCategories);
     } catch (error) {
-      handleServiceError(error, [this.categoryRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
@@ -84,7 +77,6 @@ export default class CategoryService {
     this.categoryRepository = new CategoryRepository();
     try {
       const categories = await this.categoryRepository.getAll();
-      this.categoryRepository.close();
       const parsedCategories = categories.map(
         ({ services, projects, ...restOfCategory }) => ({
           totalServices: services.length,
@@ -101,7 +93,7 @@ export default class CategoryService {
       );
       return reply.send(parsedCategories);
     } catch (error) {
-      handleServiceError(error, [this.categoryRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
@@ -110,12 +102,11 @@ export default class CategoryService {
     try {
       const { id } = this.parser.parseIdFromParams(request);
       const category = await this.categoryRepository.getSingle(id);
-      this.categoryRepository.close();
       if (!category)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Category not found");
       return reply.send(category);
     } catch (error) {
-      handleServiceError(error, [this.categoryRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
@@ -124,12 +115,11 @@ export default class CategoryService {
     try {
       const { slug } = this.parser.parseSlugFromParams(request);
       const category = await this.categoryRepository.getBySlug(slug);
-      this.categoryRepository.close();
       if (!category)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Category not found");
       return reply.send(category);
     } catch (error) {
-      handleServiceError(error, [this.categoryRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
@@ -138,10 +128,9 @@ export default class CategoryService {
     try {
       const { id } = this.parser.parseIdFromParams(request);
       await this.categoryRepository.delete(id);
-      this.categoryRepository.close();
       return reply.send();
     } catch (error) {
-      handleServiceError(error, [this.categoryRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
@@ -162,10 +151,9 @@ export default class CategoryService {
         ...parsedCategoryBody,
         slug: slugifyName(parsedCategoryBody.name),
       });
-      this.categoryRepository.close();
       return reply.send(updatedCategory);
     } catch (error) {
-      handleServiceError(error, [this.categoryRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
@@ -173,7 +161,6 @@ export default class CategoryService {
     this.categoryRepository = new CategoryRepository();
     try {
       const categories = await this.categoryRepository.getPopular();
-      this.categoryRepository.close();
       const categoriesResponse = categories.map(({ _count, ...rest }) => ({
         ...rest,
         totalServices: _count.services,
@@ -181,7 +168,7 @@ export default class CategoryService {
       }));
       return reply.send(categoriesResponse);
     } catch (error) {
-      handleServiceError(error, [this.categoryRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
@@ -190,7 +177,6 @@ export default class CategoryService {
     try {
       const { name } = this.parser.parseSearchQuery(request);
       const categories = await this.categoryRepository.queryByName(name);
-      this.categoryRepository.close();
       const categoriesResponse = categories.map(({ name, slug, id }) => ({
         id,
         name,
@@ -198,7 +184,7 @@ export default class CategoryService {
       }));
       return reply.send(categoriesResponse);
     } catch (error) {
-      handleServiceError(error, [this.categoryRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
@@ -207,7 +193,6 @@ export default class CategoryService {
     try {
       const { id } = this.parser.parseIdFromParams(request);
       const category = await this.categoryRepository.getSingle(id);
-      this.categoryRepository.close();
       if (!category)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Category not found");
       const { projects } = category;
@@ -217,7 +202,7 @@ export default class CategoryService {
           .filter((project) => project.state !== "Draft")
       );
     } catch (error) {
-      handleServiceError(error, [this.categoryRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
@@ -226,7 +211,6 @@ export default class CategoryService {
     try {
       const { id } = this.parser.parseIdFromParams(request);
       const category = await this.categoryRepository.getSingle(id);
-      this.categoryRepository.close();
       if (!category)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Category not found");
       const { services } = category;
@@ -236,7 +220,7 @@ export default class CategoryService {
           .filter((service) => service.state !== "Draft")
       );
     } catch (error) {
-      handleServiceError(error, [this.categoryRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 }

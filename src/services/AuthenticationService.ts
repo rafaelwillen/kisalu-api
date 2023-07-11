@@ -22,7 +22,6 @@ export default class AuthenticationService {
       const userAuthData = await this.authenticationRepository.getByEmail(
         parsedUserBody.email
       );
-      this.authenticationRepository.close();
       if (
         !userAuthData ||
         userAuthData.role !== "Administrator" ||
@@ -51,7 +50,7 @@ export default class AuthenticationService {
         },
       });
     } catch (error) {
-      handleServiceError(error, [this.authenticationRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
@@ -68,7 +67,6 @@ export default class AuthenticationService {
           HTTP_STATUS_CODE.UNAUTHORIZED,
           "Invalid credentials"
         );
-      this.authenticationRepository.close();
       const { User, isActive, phoneNumber, role, updatedAt, createdAt } =
         authData;
 
@@ -82,7 +80,7 @@ export default class AuthenticationService {
         ...omit(User, "id", "loginId"),
       });
     } catch (error) {
-      handleServiceError(error, [this.authenticationRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
@@ -116,10 +114,9 @@ export default class AuthenticationService {
         email,
         hashedPassword
       );
-      this.authenticationRepository.close();
       return reply.send();
     } catch (error) {
-      handleServiceError(error, [this.authenticationRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
@@ -130,7 +127,6 @@ export default class AuthenticationService {
       const userAuthData = await this.authenticationRepository.getByEmail(
         parsedUserBody.email
       );
-      this.authenticationRepository.close();
       if (
         !userAuthData ||
         userAuthData.role === "Administrator" ||
@@ -159,7 +155,7 @@ export default class AuthenticationService {
         },
       });
     } catch (error) {
-      handleServiceError(error, [this.authenticationRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 }

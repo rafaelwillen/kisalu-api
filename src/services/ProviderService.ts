@@ -40,10 +40,9 @@ export class ProviderService {
         ...userData,
       });
       const { loginId, ...created } = createdClient;
-      this.providerRepository.close();
       reply.code(HTTP_STATUS_CODE.CREATED).send(created);
     } catch (error) {
-      handleServiceError(error, [this.providerRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
@@ -57,19 +56,17 @@ export class ProviderService {
       const { url } = this.parser.parseBodyForImageUpdate(request);
       const { email } = request.user;
       const user = await this.authRepository.getByEmail(email);
-      this.authRepository.close();
       if (!user)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "User not found");
       const { id: userId } = user.User!;
       const updatedProvider =
         await this.providerRepository.updateProviderAvatarImageURL(url, userId);
-      this.providerRepository.close();
       const { avatarImageURL } = updatedProvider;
       reply.code(HTTP_STATUS_CODE.OK).send({
         avatarImageURL,
       });
     } catch (error) {
-      handleServiceError(error, [this.providerRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 }

@@ -30,10 +30,9 @@ export default class AdministratorService {
         auth: { password: hashedPassword, email },
         ...userData,
       });
-      this.administratorRepository.close();
       reply.code(HTTP_STATUS_CODE.CREATED).send(createdAdmin);
     } catch (error) {
-      handleServiceError(error, [this.administratorRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
@@ -41,11 +40,10 @@ export default class AdministratorService {
     this.administratorRepository = new AdministratorRepository();
     try {
       const administrators = await this.administratorRepository.getAll();
-      this.administratorRepository.close();
       const safeAdministrators = cleanGetAllAdministratorsReply(administrators);
       return reply.code(HTTP_STATUS_CODE.OK).send(safeAdministrators);
     } catch (error) {
-      handleServiceError(error, [this.administratorRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
@@ -54,11 +52,10 @@ export default class AdministratorService {
     try {
       const { id } = this.parser.parseIdFromParams(request);
       const administrator = await this.administratorRepository.getByID(id);
-      this.administratorRepository.close();
       if (!administrator) return reply.code(HTTP_STATUS_CODE.NOT_FOUND).send();
       return reply.send(administrator);
     } catch (error) {
-      handleServiceError(error, [this.administratorRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
@@ -88,10 +85,9 @@ export default class AdministratorService {
           "Administrator not found"
         );
       await this.administratorRepository.delete(email);
-      this.administratorRepository.close();
       return reply.send();
     } catch (error) {
-      handleServiceError(error, [this.administratorRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
@@ -110,10 +106,9 @@ export default class AdministratorService {
         id,
         parsedAdminBody
       );
-      this.administratorRepository.close();
       return reply.send(updatedAdmin);
     } catch (error) {
-      handleServiceError(error, [this.administratorRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 }

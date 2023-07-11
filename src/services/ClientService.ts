@@ -39,10 +39,9 @@ export class ClientService {
         ...userData,
       });
       const { loginId, ...created } = createdClient;
-      this.clientRepository.close();
       reply.code(HTTP_STATUS_CODE.CREATED).send(created);
     } catch (error) {
-      handleServiceError(error, [this.clientRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 }

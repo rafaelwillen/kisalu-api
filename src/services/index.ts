@@ -1,16 +1,10 @@
 import { HTTP_STATUS_CODE } from "@/constants";
-import Repository from "@/repository/Repository";
 import HTTPError from "@/utils/error/HTTPError";
 import { FastifyReply } from "fastify";
 import { FirebaseError } from "firebase/app";
 import { ZodError } from "zod";
 
-export function handleServiceError(
-  error: unknown,
-  repositories: Repository[],
-  reply: FastifyReply
-) {
-  repositories.forEach((repository) => repository.close());
+export function handleServiceError(error: unknown, reply: FastifyReply) {
   console.error(error, "Error from service");
   if (error instanceof ZodError)
     return reply.code(HTTP_STATUS_CODE.BAD_REQUEST).send(error.errors);

@@ -29,7 +29,6 @@ export default class CategoryRepository extends Repository {
     const newCategory = await this.prisma.category.create({
       data,
     });
-    this.close();
     return newCategory;
   }
 

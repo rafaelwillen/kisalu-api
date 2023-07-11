@@ -21,7 +21,6 @@ export default class ServiceService {
     try {
       const { email } = request.user;
       const provider = await this.providerRepository.getByEmail(email);
-      this.providerRepository.close();
       if (!provider)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Provider not found");
       const { categoryName, ...parsedService } =
@@ -29,7 +28,6 @@ export default class ServiceService {
       const categoryToLink = await this.categoryRepository.getByName(
         categoryName
       );
-      this.categoryRepository.close();
       if (!categoryToLink)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Category not found");
       const createdService = await this.serviceRepository.create({
@@ -38,21 +36,12 @@ export default class ServiceService {
         categoryId: categoryToLink.id,
         bannerImageURL: parsedService.bannerImageURL || null,
       });
-      this.serviceRepository.close();
 
       return reply
         .code(HTTP_STATUS_CODE.CREATED)
         .send(omit(createdService, "userId", "categoryId"));
     } catch (error) {
-      handleServiceError(
-        error,
-        [
-          this.serviceRepository,
-          this.providerRepository,
-          this.categoryRepository,
-        ],
-        reply
-      );
+      handleServiceError(error, reply);
     }
   }
 
@@ -68,7 +57,6 @@ export default class ServiceService {
       );
       if (!provider)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Provider not found");
-      this.providerRepository.close();
       return reply
         .code(HTTP_STATUS_CODE.OK)
         .send(
@@ -77,7 +65,7 @@ export default class ServiceService {
           )
         );
     } catch (error) {
-      handleServiceError(error, [this.providerRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
@@ -86,7 +74,6 @@ export default class ServiceService {
     try {
       const { id: serviceId } = this.parser.parseIdFromParams(request);
       const service = await this.serviceRepository.getById(serviceId);
-      this.serviceRepository.close();
       if (!service)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Service not found");
       if (service.state === "Draft")
@@ -95,7 +82,7 @@ export default class ServiceService {
         .code(HTTP_STATUS_CODE.OK)
         .send(omit(service, "userId", "categoryId"));
     } catch (error) {
-      handleServiceError(error, [this.serviceRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
@@ -108,7 +95,6 @@ export default class ServiceService {
     try {
       const { email } = request.user;
       const provider = await this.providerRepository.getByEmail(email);
-      this.providerRepository.close();
       if (!provider)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Provider not found");
       const { id: serviceId } = this.parser.parseIdFromParams(request);
@@ -116,18 +102,13 @@ export default class ServiceService {
         serviceId,
         provider.id
       );
-      this.serviceRepository.close();
       if (!service)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Service not found");
       return reply
         .code(HTTP_STATUS_CODE.OK)
         .send(omit(service, "userId", "categoryId"));
     } catch (error) {
-      handleServiceError(
-        error,
-        [this.serviceRepository, this.providerRepository],
-        reply
-      );
+      handleServiceError(error, reply);
     }
   }
 
@@ -137,7 +118,6 @@ export default class ServiceService {
     try {
       const { email } = request.user;
       const provider = await this.providerRepository.getByEmail(email);
-      this.providerRepository.close();
       if (!provider)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Provider not found");
       const { id: serviceId } = this.parser.parseIdFromParams(request);
@@ -148,14 +128,9 @@ export default class ServiceService {
       if (!service)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Service not found");
       await this.serviceRepository.delete(serviceId);
-      this.serviceRepository.close();
       return reply.send();
     } catch (error) {
-      handleServiceError(
-        error,
-        [this.serviceRepository, this.providerRepository],
-        reply
-      );
+      handleServiceError(error, reply);
     }
   }
 }

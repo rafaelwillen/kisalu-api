@@ -7,8 +7,4 @@ export default abstract class Repository {
   constructor() {
     this.prisma = prisma;
   }
-
-  close() {
-    this.prisma.$disconnect();
-  }
 }
