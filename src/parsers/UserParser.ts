@@ -1,4 +1,8 @@
 import { ADULT_DATE_OF_BIRTH } from "@/constants";
+import {
+  getAllCountiesFromProvince,
+  getAllProvinces,
+} from "@/utils/angolaSubdivisions";
 import { angolanPhoneNumberRegex, noSymbolRegex } from "@/utils/regex";
 import { isBefore } from "date-fns";
 import { FastifyRequest } from "fastify";
@@ -40,6 +44,22 @@ export default class UserParser extends BaseParser {
     const schema = z.object({
       url: z.string().url(),
     });
+    return schema.parse(request.body);
+  }
+
+  parseBodyForAddressUpdate(request: FastifyRequest) {
+    const schema = z
+      .object({
+        addressLine: z.string().nonempty(),
+        province: z
+          .string()
+          .nonempty()
+          .refine((province) => getAllProvinces().includes(province)),
+        county: z.string().nonempty(),
+      })
+      .refine(({ province, county }) =>
+        getAllCountiesFromProvince(province).includes(county)
+      );
     return schema.parse(request.body);
   }
 }
