@@ -1,4 +1,6 @@
 import { Gender } from "@prisma/client";
+import { omit } from "underscore";
+import { AddressCreationType } from "./AddressRepository";
 import Repository from "./Repository";
 
 export type CreatableUser = {
@@ -71,5 +73,23 @@ export default class UserRepository extends Repository {
     if (!userAuth) return null;
     if (userAuth.role === "Administrator") return null;
     return userAuth.User;
+  }
+
+  async addAddress(userId: string, address: AddressCreationType) {
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        address: {
+          create: address,
+        },
+        auth: {
+          update: { isActive: true },
+        },
+      },
+      include: {
+        address: true,
+      },
+    });
+    return omit(updatedUser, "loginId");
   }
 }

@@ -14,6 +14,9 @@ export default function providerRoutes(
   app.put("/avatar", { onRequest: useUserIsProvider }, (req, rep) =>
     providerService.updateUserAvatarImage(req, rep)
   );
+  app.put("/address", { onRequest: useUserIsProvider }, (req, rep) =>
+    providerService.updateUserAddress(req, rep)
+  );
   app.register(servicesRoutes, { prefix: "/services" });
   done();
 }
