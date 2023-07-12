@@ -1,4 +1,6 @@
-import { Gender, User } from "@prisma/client";
+import { Gender } from "@prisma/client";
+import { omit } from "underscore";
+import { AddressCreationType } from "./AddressRepository";
 import Repository from "./Repository";
 
 export type CreatableUser = {
@@ -46,11 +48,15 @@ export default class UserRepository extends Repository {
     return updatedProvider;
   }
 
-  async getByEmail(email: string): Promise<User | null> {
+  async getByEmail(email: string) {
     const userAuth = await this.prisma.auth.findUnique({
       where: { email },
       include: {
-        User: true,
+        User: {
+          include: {
+            address: true,
+          },
+        },
       },
     });
     if (!userAuth) return null;
@@ -67,5 +73,23 @@ export default class UserRepository extends Repository {
     if (!userAuth) return null;
     if (userAuth.role === "Administrator") return null;
     return userAuth.User;
+  }
+
+  async addAddress(userId: string, address: AddressCreationType) {
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        address: {
+          create: address,
+        },
+        auth: {
+          update: { isActive: true },
+        },
+      },
+      include: {
+        address: true,
+      },
+    });
+    return omit(updatedUser, "loginId");
   }
 }
