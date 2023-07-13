@@ -1,4 +1,5 @@
 import useEnsureAdminIsAuthenticated from "@/hooks/useEnsureAdminIsAuthenticated";
+import useUserIsClientOrProvider from "@/hooks/useUserIsClientOrProvider";
 import AuthenticationService from "@/services/AuthenticationService";
 import { FastifyInstance } from "fastify";
 
@@ -24,6 +25,11 @@ export default async function authenticationRoutes(
       onRequest: [useEnsureAdminIsAuthenticated],
     },
     (req, rep) => authenticationService.resetAdministratorPassword(req, rep)
+  );
+  app.put(
+    "/password-reset/user",
+    { onRequest: [useUserIsClientOrProvider] },
+    (req, rep) => authenticationService.resetUserPassword(req, rep)
   );
   done();
 }

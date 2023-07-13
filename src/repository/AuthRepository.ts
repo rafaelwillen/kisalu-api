@@ -19,7 +19,7 @@ export class AuthRepository extends Repository {
     return userAuthData;
   }
 
-  async updateAdminPassword(email: string, password: string) {
+  async updatePassword(email: string, password: string) {
     const userAuthData = await this.prisma.auth.update({
       where: { email },
       data: {

@@ -102,7 +102,7 @@ export default class AuthenticationService {
           "You are not allowed to perform this action"
         );
       const { newPassword, email } =
-        this.parser.parsePasswordResetBody(request);
+        this.parser.parseAdminPasswordResetBody(request);
       const userAuthData = await this.authenticationRepository.getByEmail(
         email
       );
@@ -112,10 +112,28 @@ export default class AuthenticationService {
           "Administrator not found"
         );
       const hashedPassword = await hashPassword(newPassword);
-      await this.authenticationRepository.updateAdminPassword(
-        email,
-        hashedPassword
-      );
+      await this.authenticationRepository.updatePassword(email, hashedPassword);
+      return reply.send();
+    } catch (error) {
+      handleServiceError(error, reply);
+    }
+  }
+
+  async resetUserPassword(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { email } = request.user;
+      const { newPassword, oldPassword } =
+        this.parser.parseUserPasswordResetBody(request);
+      const authData = await this.authenticationRepository.getByEmail(email);
+      if (!authData || authData.role === "Administrator")
+        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "User not found");
+      if (!(await comparePasswords(oldPassword, authData.password)))
+        throw new HTTPError(
+          HTTP_STATUS_CODE.UNAUTHORIZED,
+          "Invalid credentials"
+        );
+      const hashedPassword = await hashPassword(newPassword);
+      await this.authenticationRepository.updatePassword(email, hashedPassword);
       return reply.send();
     } catch (error) {
       handleServiceError(error, reply);
