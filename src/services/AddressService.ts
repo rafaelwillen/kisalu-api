@@ -1,10 +1,8 @@
-import { HTTP_STATUS_CODE } from "@/constants";
 import AddressParser from "@/parsers/AddressParser";
 import {
   getAllCountiesFromProvince,
   getAllProvinces,
 } from "@/utils/angolaSubdivisions";
-import HTTPError from "@/utils/error/HTTPError";
 import { FastifyReply, FastifyRequest } from "fastify";
 
 export class AddressService {
@@ -24,11 +22,7 @@ export class AddressService {
       const counties = getAllCountiesFromProvince(province);
       return reply.send(counties);
     } catch (error) {
-      throw new HTTPError(
-        HTTP_STATUS_CODE.BAD_REQUEST,
-        "Invalid province name"
-      );
+      return reply.send([]);
     }
   }
 }
-
