@@ -1,6 +1,7 @@
 import useUserIsProvider from "@/hooks/useUserIsProvider";
 import { ProviderService } from "@/services/ProviderService";
 import { FastifyInstance } from "fastify";
+import experienceInfoRoutes from "./experienceInfo";
 import servicesRoutes from "./service";
 
 export default function providerRoutes(
@@ -17,6 +18,8 @@ export default function providerRoutes(
   app.put("/address", { onRequest: useUserIsProvider }, (req, rep) =>
     providerService.updateUserAddress(req, rep)
   );
+
+  app.register(experienceInfoRoutes, { prefix: "/experience" });
   app.register(servicesRoutes, { prefix: "/services" });
   done();
 }

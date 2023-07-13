@@ -45,6 +45,11 @@ enum FileType {
   Image
 }
 
+enum ExperienceType {
+  Work
+  Education
+}
+
 model User {
   id                 String           @id @default(uuid())
   firstName          String
@@ -105,16 +110,17 @@ model Bidding {
 }
 
 model ExperienceInfo {
-  id              String    @id @default(uuid())
+  id              String         @id @default(uuid())
   institutionName String
   title           String
   description     String
   startDate       DateTime
   endDate         DateTime?
-  provider        User?     @relation(fields: [providerUserId], references: [id])
+  type            ExperienceType
+  provider        User?          @relation(fields: [providerUserId], references: [id])
   providerUserId  String?
 
-  @@map("ProviderExpirienceInfo")
+  @@map("ProviderExperienceInfo")
 }
 
 model Portfolio {
