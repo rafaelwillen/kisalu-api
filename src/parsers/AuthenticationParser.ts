@@ -11,10 +11,18 @@ export default class AuthenticationParser extends BaseParser {
     return schema.parse(request.body);
   }
 
-  parsePasswordResetBody(request: FastifyRequest) {
+  parseAdminPasswordResetBody(request: FastifyRequest) {
     const schema = z.object({
       newPassword: z.string().min(8),
       email: z.string().email(),
+    });
+    return schema.parse(request.body);
+  }
+
+  parseUserPasswordResetBody(request: FastifyRequest) {
+    const schema = z.object({
+      newPassword: z.string().min(8),
+      oldPassword: z.string().min(8),
     });
     return schema.parse(request.body);
   }
