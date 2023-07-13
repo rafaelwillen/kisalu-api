@@ -112,10 +112,7 @@ export default class AuthenticationService {
           "Administrator not found"
         );
       const hashedPassword = await hashPassword(newPassword);
-      await this.authenticationRepository.updateAdminPassword(
-        email,
-        hashedPassword
-      );
+      await this.authenticationRepository.updatePassword(email, hashedPassword);
       return reply.send();
     } catch (error) {
       handleServiceError(error, reply);
