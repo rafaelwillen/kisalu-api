@@ -23,7 +23,10 @@ export default class ExperienceInfoService {
       const { email } = request.user;
       const provider = await this.providerRepository.getByEmail(email);
       if (!provider)
-        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Provider not found");
+        throw new HTTPError(
+          HTTP_STATUS_CODE.UNAUTHORIZED,
+          "Provider not found"
+        );
       const { id: providerId } = provider;
       const experienceInfo = await this.experienceInfoRepository.create(
         experienceInfoData,
@@ -42,7 +45,10 @@ export default class ExperienceInfoService {
       const { email } = request.user;
       const provider = await this.providerRepository.getByEmail(email);
       if (!provider)
-        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Provider not found");
+        throw new HTTPError(
+          HTTP_STATUS_CODE.UNAUTHORIZED,
+          "Provider not found"
+        );
       const { id: providerId } = provider;
       const experienceInfos =
         await this.experienceInfoRepository.getAllFromProvider(providerId);
@@ -87,7 +93,10 @@ export default class ExperienceInfoService {
       const { email } = request.user;
       const provider = await this.providerRepository.getByEmail(email);
       if (!provider)
-        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Provider not found");
+        throw new HTTPError(
+          HTTP_STATUS_CODE.UNAUTHORIZED,
+          "Provider not found"
+        );
       const { id: providerId } = provider;
       const experienceInfo = await this.experienceInfoRepository.getById(id);
       if (!experienceInfo)
