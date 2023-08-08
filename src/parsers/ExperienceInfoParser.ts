@@ -9,12 +9,15 @@ export default class ExperienceInfoParser extends BaseParser {
       .object({
         title: z.string().min(3),
         institutionName: z.string().min(3),
-        startDate: z.date().max(new Date(), "Date cannot be after today"),
+        startDate: z
+          .string()
+          .datetime()
+          .transform((value) => new Date(value)),
         endDate: z
           .string()
           .datetime()
           .transform((value) => new Date(value))
-          .or(z.null()),
+          .or(z.undefined().transform(() => null)),
         description: z.string().min(3),
         type: z.enum(["Work", "Education"]),
       })

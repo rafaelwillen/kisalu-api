@@ -19,7 +19,10 @@ export default class ServiceService {
       const { email } = request.user;
       const provider = await this.providerRepository.getByEmail(email);
       if (!provider)
-        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Provider not found");
+        throw new HTTPError(
+          HTTP_STATUS_CODE.UNAUTHORIZED,
+          "Provider not found"
+        );
       const { categoryName, ...parsedService } =
         this.parser.parseBodyForCreation(request);
       const categoryToLink = await this.categoryRepository.getByName(

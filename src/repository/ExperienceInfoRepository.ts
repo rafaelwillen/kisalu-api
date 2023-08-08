@@ -22,6 +22,9 @@ export class ExperienceInfoRepository extends Repository {
   async getAllFromProvider(providerUserId: string) {
     const experienceInfos = await this.prisma.experienceInfo.findMany({
       where: { providerUserId },
+      orderBy: {
+        startDate: "asc",
+      },
     });
     return experienceInfos;
   }

@@ -205,6 +205,8 @@ model Attachment {
   url       String
   Dispute   Dispute? @relation(fields: [disputeId], references: [id])
   disputeId String?
+  Project   Project? @relation(fields: [projectId], references: [id])
+  projectId String?
 }
 
 model Category {
@@ -223,21 +225,21 @@ model Category {
 }
 
 model Project {
-  id                String     @id @default(uuid())
-  title             String
-  description       String
-  bannerImageURL    String?
-  publishedDate     DateTime?
-  createdAt         DateTime   @default(now())
-  viewsCount        Int        @default(0)
-  state             State      @default(Draft)
-  featuredImagesURL String[]
-  minimumPrice      Int
-  maximumPrice      Int
-  activities        Activity[]
-  category          Category?  @relation(fields: [categoryId], references: [id])
-  categoryId        String?
-  biddings          Bidding[]
-  User              User?      @relation(fields: [userId], references: [id])
-  userId            String?
+  id             String       @id @default(uuid())
+  title          String
+  description    String
+  bannerImageURL String?
+  publishedDate  DateTime?
+  createdAt      DateTime     @default(now())
+  viewsCount     Int          @default(0)
+  state          State        @default(Draft)
+  attachments    Attachment[]
+  minimumPrice   Int
+  maximumPrice   Int
+  activities     Activity[]
+  category       Category?    @relation(fields: [categoryId], references: [id])
+  categoryId     String?
+  biddings       Bidding[]
+  User           User?        @relation(fields: [userId], references: [id])
+  userId         String?
 }
