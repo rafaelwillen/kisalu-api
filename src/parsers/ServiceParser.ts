@@ -8,6 +8,7 @@ export default class ServiceParser extends BaseParser {
       title: z.string().min(3),
       description: z.string().min(3),
       bannerImageURL: z.string().url().optional(),
+      deliveryTime: z.string(),
       featuredImagesURL: z.array(z.string().url()).optional().default([]),
       minimumPrice: z.number().int().min(0),
       isHighlighted: z.boolean(),
