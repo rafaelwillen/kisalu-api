@@ -56,13 +56,14 @@ export default class ServiceService {
       );
       if (!provider)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Provider not found");
-      return reply
-        .code(HTTP_STATUS_CODE.OK)
-        .send(
-          provider.createdServices.map((project) =>
-            omit(project, "userId", "categoryId")
-          )
-        );
+      return reply.code(HTTP_STATUS_CODE.OK).send(
+        provider.createdServices
+          .map((service) => omit(service, "userId", "categoryId"))
+          .map(({ category, ...service }) => ({
+            ...service,
+            category: category?.name,
+          }))
+      );
     } catch (error) {
       handleServiceError(error, reply);
     }

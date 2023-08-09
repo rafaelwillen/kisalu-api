@@ -14,7 +14,11 @@ export type Provider = Omit<User, "loginId"> & {
   experiences: ExperienceInfo[];
   portfolios: Portfolio[];
   activities: Activity[];
-  createdServices: Service[];
+  createdServices: (Service & {
+    category: {
+      name: string;
+    } | null;
+  })[];
   disputes: Dispute[];
 };
 
@@ -31,7 +35,15 @@ export class ProviderRepository extends UserRepository {
         experienceInfo: true,
         portfolio: true,
         providerActivities: true,
-        services: true,
+        services: {
+          include: {
+            category: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
         disputes: true,
       },
     });
