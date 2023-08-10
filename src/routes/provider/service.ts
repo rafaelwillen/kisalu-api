@@ -16,5 +16,8 @@ export default function servicesRoutes(
     serviceService.getSingleServiceFromProvider(req, rep)
   );
   app.delete("/:id", (req, rep) => serviceService.deleteService(req, rep));
+  app.put("/state/:id", (req, rep) =>
+    serviceService.toggleServiceState(req, rep)
+  );
   done();
 }

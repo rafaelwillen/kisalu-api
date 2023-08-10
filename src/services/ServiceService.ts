@@ -128,4 +128,30 @@ export default class ServiceService {
       handleServiceError(error, reply);
     }
   }
+
+  async toggleServiceState(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { email } = request.user;
+      const provider = await this.providerRepository.getByEmail(email);
+      if (!provider)
+        throw new HTTPError(HTTP_STATUS_CODE.FORBIDDEN, "Not allowed");
+      const { id: serviceId } = this.parser.parseIdFromParams(request);
+      const service = await this.serviceRepository.getByIdFromOwner(
+        serviceId,
+        provider.id
+      );
+      if (!service)
+        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Service not found");
+      if (service.state === "Unavailable") {
+        throw new HTTPError(HTTP_STATUS_CODE.FORBIDDEN, "Not allowed");
+      }
+      const updatedService = await this.serviceRepository.updateState(
+        serviceId,
+        service.state === "Available" ? "Draft" : "Available"
+      );
+      return reply.send(omit(updatedService, "userId", "categoryId"));
+    } catch (error) {
+      handleServiceError(error, reply);
+    }
+  }
 }
