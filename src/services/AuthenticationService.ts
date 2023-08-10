@@ -5,24 +5,22 @@ import AuthenticationParser from "@/parsers/AuthenticationParser";
 import { AuthRepository } from "@/repository/AuthRepository";
 import HTTPError from "@/utils/error/HTTPError";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { omit } from "underscore";
+import { omit, pick } from "underscore";
 import { handleServiceError } from ".";
 
 export default class AuthenticationService {
-  private authenticationRepository: AuthRepository | undefined;
+  private authenticationRepository = new AuthRepository();
   private readonly parser = new AuthenticationParser();
 
   async authenticateAdministrator(
     request: FastifyRequest,
     reply: FastifyReply
   ) {
-    this.authenticationRepository = new AuthRepository();
     try {
       const parsedUserBody = this.parser.parseBodyForAuthentication(request);
       const userAuthData = await this.authenticationRepository.getByEmail(
         parsedUserBody.email
       );
-      this.authenticationRepository.close();
       if (
         !userAuthData ||
         userAuthData.role !== "Administrator" ||
@@ -51,7 +49,7 @@ export default class AuthenticationService {
         },
       });
     } catch (error) {
-      handleServiceError(error, [this.authenticationRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
@@ -59,7 +57,6 @@ export default class AuthenticationService {
     request: FastifyRequest,
     reply: FastifyReply
   ) {
-    this.authenticationRepository = new AuthRepository();
     try {
       const { email } = await verifyJWT(request);
       const authData = await this.authenticationRepository.getByEmail(email);
@@ -68,7 +65,6 @@ export default class AuthenticationService {
           HTTP_STATUS_CODE.UNAUTHORIZED,
           "Invalid credentials"
         );
-      this.authenticationRepository.close();
       const { User, isActive, phoneNumber, role, updatedAt, createdAt } =
         authData;
 
@@ -79,10 +75,15 @@ export default class AuthenticationService {
         updatedAt,
         createdAt,
         email,
-        ...omit(User, "id", "loginId"),
+        ...omit(User, "id", "loginId", "address"),
+        address: User?.address
+          ? {
+              ...pick(User?.address, "county", "province", "addressLine"),
+            }
+          : null,
       });
     } catch (error) {
-      handleServiceError(error, [this.authenticationRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
@@ -90,7 +91,6 @@ export default class AuthenticationService {
     request: FastifyRequest,
     reply: FastifyReply
   ) {
-    this.authenticationRepository = new AuthRepository();
     const mainAdminsEmails = [
       "rafaelpadre@gmail.com",
       "rafael.padre@kisalu.com",
@@ -102,7 +102,7 @@ export default class AuthenticationService {
           "You are not allowed to perform this action"
         );
       const { newPassword, email } =
-        this.parser.parsePasswordResetBody(request);
+        this.parser.parseAdminPasswordResetBody(request);
       const userAuthData = await this.authenticationRepository.getByEmail(
         email
       );
@@ -112,25 +112,40 @@ export default class AuthenticationService {
           "Administrator not found"
         );
       const hashedPassword = await hashPassword(newPassword);
-      await this.authenticationRepository.updateAdminPassword(
-        email,
-        hashedPassword
-      );
-      this.authenticationRepository.close();
+      await this.authenticationRepository.updatePassword(email, hashedPassword);
       return reply.send();
     } catch (error) {
-      handleServiceError(error, [this.authenticationRepository], reply);
+      handleServiceError(error, reply);
+    }
+  }
+
+  async resetUserPassword(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { email } = request.user;
+      const { newPassword, oldPassword } =
+        this.parser.parseUserPasswordResetBody(request);
+      const authData = await this.authenticationRepository.getByEmail(email);
+      if (!authData || authData.role === "Administrator")
+        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "User not found");
+      if (!(await comparePasswords(oldPassword, authData.password)))
+        throw new HTTPError(
+          HTTP_STATUS_CODE.UNAUTHORIZED,
+          "Invalid credentials"
+        );
+      const hashedPassword = await hashPassword(newPassword);
+      await this.authenticationRepository.updatePassword(email, hashedPassword);
+      return reply.send();
+    } catch (error) {
+      handleServiceError(error, reply);
     }
   }
 
   async authenticateUser(request: FastifyRequest, reply: FastifyReply) {
-    this.authenticationRepository = new AuthRepository();
     try {
       const parsedUserBody = this.parser.parseBodyForAuthentication(request);
       const userAuthData = await this.authenticationRepository.getByEmail(
         parsedUserBody.email
       );
-      this.authenticationRepository.close();
       if (
         !userAuthData ||
         userAuthData.role === "Administrator" ||
@@ -155,11 +170,19 @@ export default class AuthenticationService {
           email,
           role,
           createdAt,
-          ...omit(User, "id", "loginId", "biography", "birthDate", "gender"),
+          ...omit(
+            User,
+            "id",
+            "loginId",
+            "biography",
+            "birthDate",
+            "gender",
+            "address"
+          ),
         },
       });
     } catch (error) {
-      handleServiceError(error, [this.authenticationRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 }

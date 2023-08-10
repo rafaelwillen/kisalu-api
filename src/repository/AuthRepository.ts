@@ -9,13 +9,17 @@ export class AuthRepository extends Repository {
     const userAuthData = await this.prisma.auth.findUnique({
       where: { email },
       include: {
-        User: true,
+        User: {
+          include: {
+            address: true,
+          },
+        },
       },
     });
     return userAuthData;
   }
 
-  async updateAdminPassword(email: string, password: string) {
+  async updatePassword(email: string, password: string) {
     const userAuthData = await this.prisma.auth.update({
       where: { email },
       data: {

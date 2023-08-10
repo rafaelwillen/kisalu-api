@@ -1,5 +1,5 @@
 import { Auth, Category, Dispute, Gender, User } from "@prisma/client";
-import Repository from "./Repository";
+import UserRepository from "./UserRepository";
 
 interface ICreatableAdministrator {
   firstName: string;
@@ -28,7 +28,7 @@ export type AdminUpdateType = {
   gender?: Gender;
 };
 
-export default class AdministratorRepository extends Repository {
+export default class AdministratorRepository extends UserRepository {
   constructor() {
     super();
   }
@@ -62,20 +62,6 @@ export default class AdministratorRepository extends Repository {
     if (!user) return null;
     if (user.auth.role !== "Administrator") return null;
     return user;
-  }
-
-  async getByEmail(email: string): Promise<User | null> {
-    const userAuth = await this.prisma.auth.findUnique({
-      where: {
-        email,
-      },
-      include: {
-        User: true,
-      },
-    });
-    if (!userAuth) return null;
-    if (userAuth?.role !== "Administrator") return null;
-    return userAuth.User;
   }
 
   async getAll(): Promise<CompleteAdministratorType[]> {

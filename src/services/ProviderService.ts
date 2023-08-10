@@ -1,17 +1,15 @@
 import { HTTP_STATUS_CODE } from "@/constants";
 import { hashPassword } from "@/lib/passwordHashing";
-import UserParser from "@/parsers/UserParser";
-import UserRepository from "@/repository/UserRepository";
+import { ProviderRepository } from "@/repository/ProviderRepository";
 import HTTPError from "@/utils/error/HTTPError";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { handleServiceError } from ".";
+import UserService from "./UserService";
 
-export class ProviderService {
-  private providerRepository: UserRepository | undefined;
-  private readonly parser = new UserParser();
+export class ProviderService extends UserService {
+  private providerRepository = new ProviderRepository();
 
   async createProvider(request: FastifyRequest, reply: FastifyReply) {
-    this.providerRepository = new UserRepository();
     try {
       const { password, email, phoneNumber, ...userData } =
         this.parser.parseBodyForUserCreation(request);
@@ -29,7 +27,7 @@ export class ProviderService {
           "An user with this phone number already exists"
         );
       const hashedPassword = await hashPassword(password);
-      const createdClient = await this.providerRepository.createProvier({
+      const createdClient = await this.providerRepository.createProvider({
         auth: {
           email,
           password: hashedPassword,
@@ -38,10 +36,9 @@ export class ProviderService {
         ...userData,
       });
       const { loginId, ...created } = createdClient;
-      this.providerRepository.close();
       reply.code(HTTP_STATUS_CODE.CREATED).send(created);
     } catch (error) {
-      handleServiceError(error, [this.providerRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 }

@@ -1,4 +1,4 @@
-import { Service } from "@prisma/client";
+import { Service, State } from "@prisma/client";
 import Repository from "./Repository";
 
 type CreatableService = Omit<
@@ -52,6 +52,16 @@ export default class ServiceRepository extends Repository {
   async delete(id: string) {
     const service = await this.prisma.service.delete({
       where: { id },
+    });
+    return service;
+  }
+
+  async updateState(id: string, state: State) {
+    const service = await this.prisma.service.update({
+      where: { id },
+      data: {
+        state,
+      },
     });
     return service;
   }

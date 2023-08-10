@@ -1,18 +1,9 @@
-import {
-  Activity,
-  Bidding,
-  Dispute,
-  ExperienceInfo,
-  Gender,
-  Portfolio,
-  Project,
-  Review,
-  Service,
-  User,
-} from "@prisma/client";
+import { Gender } from "@prisma/client";
+import { omit } from "underscore";
+import { AddressCreationType } from "./AddressRepository";
 import Repository from "./Repository";
 
-type CreatableUser = {
+export type CreatableUser = {
   firstName: string;
   lastName: string;
   avatarImageURL: string;
@@ -26,120 +17,50 @@ type CreatableUser = {
   };
 };
 
-export type Client = Omit<User, "loginId"> & {
-  reviews: Review[];
-  activities: Activity[];
-  createdProjects: Project[];
-  disputes: Dispute[];
-};
-
-export type Provider = Omit<User, "loginId"> & {
-  biddings: Bidding[];
-  experiences: ExperienceInfo[];
-  portfolios: Portfolio[];
-  activities: Activity[];
-  createdServices: Service[];
-  disputes: Dispute[];
-};
-
 export default class UserRepository extends Repository {
   constructor() {
     super();
   }
 
-  async createClient(data: CreatableUser) {
-    const newClient = await this.prisma.user.create({
+  protected async createUser(data: CreatableUser, role: "Client" | "Provider") {
+    const newUser = await this.prisma.user.create({
       data: {
         ...data,
         auth: {
           create: {
             ...data.auth,
-            isActive: true,
-            role: "Client",
+            isActive: false,
+            role,
           },
         },
       },
     });
-    return newClient;
+    return newUser;
   }
 
-  async createProvier(data: CreatableUser) {
-    const newProvider = await this.prisma.user.create({
+  async updateUserAvatarImageURL(url: string, id: string) {
+    const updatedProvider = await this.prisma.user.update({
+      where: { id },
       data: {
-        ...data,
-        auth: {
-          create: {
-            ...data.auth,
-            isActive: true,
-            role: "Provider",
-          },
-        },
+        avatarImageURL: url,
       },
     });
-    return newProvider;
+    return updatedProvider;
   }
 
-  async getByEmail(email: string): Promise<User | null> {
+  async getByEmail(email: string) {
     const userAuth = await this.prisma.auth.findUnique({
       where: { email },
       include: {
-        User: true,
-      },
-    });
-    if (!userAuth) return null;
-    if (userAuth.role === "Administrator") return null;
-    return userAuth.User;
-  }
-
-  async getProviderById(id: string): Promise<Provider | null> {
-    const provider = await this.prisma.user.findUnique({
-      where: { id },
-      include: {
-        biddings: true,
-        experienceInfo: true,
-        portfolio: true,
-        providerActivities: true,
-        services: true,
-        disputes: true,
-      },
-    });
-    if (!provider) return null;
-    return {
-      ...provider,
-      activities: provider.providerActivities,
-      experiences: provider.experienceInfo,
-      portfolios: provider.portfolio,
-      createdServices: provider.services,
-    };
-  }
-
-  async getClientById(id: string): Promise<Client | null> {
-    const client = await this.prisma.user.findUnique({
-      where: { id },
-      include: {
-        clientActivities: true,
-        disputes: true,
-        reviews: true,
-        projects: {
+        User: {
           include: {
-            category: {
-              select: {
-                name: true,
-                slug: true,
-              },
-            },
+            address: true,
           },
         },
       },
     });
-    if (!client) return null;
-    return {
-      ...client,
-      activities: client.clientActivities,
-      reviews: client.reviews,
-      createdProjects: client.projects,
-      disputes: client.disputes,
-    };
+    if (!userAuth) return null;
+    return userAuth.User;
   }
 
   async getByPhoneNumber(phoneNumber: string) {
@@ -152,5 +73,23 @@ export default class UserRepository extends Repository {
     if (!userAuth) return null;
     if (userAuth.role === "Administrator") return null;
     return userAuth.User;
+  }
+
+  async addAddress(userId: string, address: AddressCreationType) {
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        address: {
+          create: address,
+        },
+        auth: {
+          update: { isActive: true },
+        },
+      },
+      include: {
+        address: true,
+      },
+    });
+    return omit(updatedUser, "loginId");
   }
 }

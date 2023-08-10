@@ -45,6 +45,11 @@ enum FileType {
   Image
 }
 
+enum ExperienceType {
+  Work
+  Education
+}
+
 model User {
   id                 String           @id @default(uuid())
   firstName          String
@@ -65,6 +70,7 @@ model User {
   projects           Project[]
   disputes           Dispute[]
   createdCategories  Category[]
+  address            Address?
 }
 
 model Auth {
@@ -82,21 +88,14 @@ model Auth {
 }
 
 model Address {
-  id            String      @id @default(uuid())
-  county        String
-  province      String
-  addressLine   String
-  coordinates   Coordinates @relation(fields: [coordinatesId], references: [id])
-  coordinatesId String      @unique
-  activity      Activity?   @relation(fields: [activityId], references: [id])
-  activityId    String?     @unique
-}
-
-model Coordinates {
-  id        String   @id @default(uuid())
-  latitude  String
-  longitude String
-  Address   Address?
+  id          String    @id @default(uuid())
+  county      String
+  province    String
+  addressLine String
+  activity    Activity? @relation(fields: [activityId], references: [id])
+  activityId  String?   @unique
+  user        User?     @relation(fields: [userId], references: [id])
+  userId      String?   @unique
 }
 
 model Bidding {
@@ -111,16 +110,17 @@ model Bidding {
 }
 
 model ExperienceInfo {
-  id              String    @id @default(uuid())
+  id              String         @id @default(uuid())
   institutionName String
   title           String
   description     String
   startDate       DateTime
   endDate         DateTime?
-  provider        User?     @relation(fields: [providerUserId], references: [id])
+  type            ExperienceType
+  provider        User?          @relation(fields: [providerUserId], references: [id])
   providerUserId  String?
 
-  @@map("ProviderExpirienceInfo")
+  @@map("ProviderExperienceInfo")
 }
 
 model Portfolio {
@@ -176,6 +176,7 @@ model Service {
   featuredImagesURL String[]
   minimumPrice      Int
   isHighlighted     Boolean
+  deliveryTime      String
   activities        Activity[]
   category          Category?  @relation(fields: [categoryId], references: [id])
   categoryId        String?
@@ -205,6 +206,8 @@ model Attachment {
   url       String
   Dispute   Dispute? @relation(fields: [disputeId], references: [id])
   disputeId String?
+  Project   Project? @relation(fields: [projectId], references: [id])
+  projectId String?
 }
 
 model Category {
@@ -223,21 +226,21 @@ model Category {
 }
 
 model Project {
-  id                String     @id @default(uuid())
-  title             String
-  description       String
-  bannerImageURL    String?
-  publishedDate     DateTime?
-  createdAt         DateTime   @default(now())
-  viewsCount        Int        @default(0)
-  state             State      @default(Draft)
-  featuredImagesURL String[]
-  minimumPrice      Int
-  maximumPrice      Int
-  activities        Activity[]
-  category          Category?  @relation(fields: [categoryId], references: [id])
-  categoryId        String?
-  biddings          Bidding[]
-  User              User?      @relation(fields: [userId], references: [id])
-  userId            String?
+  id             String       @id @default(uuid())
+  title          String
+  description    String
+  bannerImageURL String?
+  publishedDate  DateTime?
+  createdAt      DateTime     @default(now())
+  viewsCount     Int          @default(0)
+  state          State        @default(Draft)
+  attachments    Attachment[]
+  minimumPrice   Int
+  maximumPrice   Int
+  activities     Activity[]
+  category       Category?    @relation(fields: [categoryId], references: [id])
+  categoryId     String?
+  biddings       Bidding[]
+  User           User?        @relation(fields: [userId], references: [id])
+  userId         String?
 }

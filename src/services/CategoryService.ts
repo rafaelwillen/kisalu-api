@@ -1,6 +1,7 @@
 import { HTTP_STATUS_CODE } from "@/constants";
 import CategoryParser from "@/parsers/CategoryParser";
-import { AdministratorRepository, CategoryRepository } from "@/repository";
+import AdministratorRepository from "@/repository/AdministratorRepository";
+import CategoryRepository from "@/repository/CategoryRepository";
 import { slugifyName } from "@/utils";
 import HTTPError from "@/utils/error/HTTPError";
 import { FastifyReply, FastifyRequest } from "fastify";
@@ -8,16 +9,14 @@ import { omit } from "underscore";
 import { handleServiceError } from ".";
 
 export default class CategoryService {
-  private categoryRepository: CategoryRepository | undefined;
+  private categoryRepository = new CategoryRepository();
   private readonly parser = new CategoryParser();
 
   async createCategory(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryRepository = new CategoryRepository();
     const administratorRepository = new AdministratorRepository();
     try {
       const { email } = request.user;
       const admin = await administratorRepository.getByEmail(email);
-      administratorRepository.close();
       if (!admin) throw new Error("Administrator not found");
       const parsedCategoryBody = this.parser.parseBodyForCreation(request);
       const categoryExists = await this.categoryRepository.getByName(
@@ -33,25 +32,18 @@ export default class CategoryService {
         creatorAdminId: admin.id,
         slug: slugifyName(parsedCategoryBody.name),
       });
-      this.categoryRepository.close();
       return reply
         .code(HTTP_STATUS_CODE.CREATED)
         .send(omit(createdCategory, "creatorAdminId"));
     } catch (error) {
-      handleServiceError(
-        error,
-        [this.categoryRepository, administratorRepository],
-        reply
-      );
+      handleServiceError(error, reply);
     }
   }
 
   async getAllCategories(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryRepository = new CategoryRepository();
     try {
       const categories = await this.categoryRepository.getAll();
       // TODO: Find a way to get the average rating of each category
-      this.categoryRepository.close();
       const parsedCategories = categories.map(
         ({ services, projects, ...restOfCategory }) => ({
           ...omit(
@@ -73,7 +65,7 @@ export default class CategoryService {
       );
       return reply.send(parsedCategories);
     } catch (error) {
-      handleServiceError(error, [this.categoryRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
@@ -81,10 +73,8 @@ export default class CategoryService {
     request: FastifyRequest,
     reply: FastifyReply
   ) {
-    this.categoryRepository = new CategoryRepository();
     try {
       const categories = await this.categoryRepository.getAll();
-      this.categoryRepository.close();
       const parsedCategories = categories.map(
         ({ services, projects, ...restOfCategory }) => ({
           totalServices: services.length,
@@ -101,52 +91,45 @@ export default class CategoryService {
       );
       return reply.send(parsedCategories);
     } catch (error) {
-      handleServiceError(error, [this.categoryRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
   async getCategoryByID(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryRepository = new CategoryRepository();
     try {
       const { id } = this.parser.parseIdFromParams(request);
       const category = await this.categoryRepository.getSingle(id);
-      this.categoryRepository.close();
       if (!category)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Category not found");
       return reply.send(category);
     } catch (error) {
-      handleServiceError(error, [this.categoryRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
   async getCategoryBySlug(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryRepository = new CategoryRepository();
     try {
       const { slug } = this.parser.parseSlugFromParams(request);
       const category = await this.categoryRepository.getBySlug(slug);
-      this.categoryRepository.close();
       if (!category)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Category not found");
       return reply.send(category);
     } catch (error) {
-      handleServiceError(error, [this.categoryRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
   async deleteCategory(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryRepository = new CategoryRepository();
     try {
       const { id } = this.parser.parseIdFromParams(request);
       await this.categoryRepository.delete(id);
-      this.categoryRepository.close();
       return reply.send();
     } catch (error) {
-      handleServiceError(error, [this.categoryRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
   async updateCategory(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryRepository = new CategoryRepository();
     try {
       const { id } = this.parser.parseIdFromParams(request);
       const parsedCategoryBody = this.parser.parseBodyForCreation(request);
@@ -162,18 +145,15 @@ export default class CategoryService {
         ...parsedCategoryBody,
         slug: slugifyName(parsedCategoryBody.name),
       });
-      this.categoryRepository.close();
       return reply.send(updatedCategory);
     } catch (error) {
-      handleServiceError(error, [this.categoryRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
   async getPopularCategories(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryRepository = new CategoryRepository();
     try {
       const categories = await this.categoryRepository.getPopular();
-      this.categoryRepository.close();
       const categoriesResponse = categories.map(({ _count, ...rest }) => ({
         ...rest,
         totalServices: _count.services,
@@ -181,16 +161,14 @@ export default class CategoryService {
       }));
       return reply.send(categoriesResponse);
     } catch (error) {
-      handleServiceError(error, [this.categoryRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
   async queryCategoriesByName(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryRepository = new CategoryRepository();
     try {
       const { name } = this.parser.parseSearchQuery(request);
       const categories = await this.categoryRepository.queryByName(name);
-      this.categoryRepository.close();
       const categoriesResponse = categories.map(({ name, slug, id }) => ({
         id,
         name,
@@ -198,16 +176,14 @@ export default class CategoryService {
       }));
       return reply.send(categoriesResponse);
     } catch (error) {
-      handleServiceError(error, [this.categoryRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
   async getProjectsByCategory(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryRepository = new CategoryRepository();
     try {
       const { id } = this.parser.parseIdFromParams(request);
       const category = await this.categoryRepository.getSingle(id);
-      this.categoryRepository.close();
       if (!category)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Category not found");
       const { projects } = category;
@@ -217,16 +193,14 @@ export default class CategoryService {
           .filter((project) => project.state !== "Draft")
       );
     } catch (error) {
-      handleServiceError(error, [this.categoryRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 
   async getServicesByCategory(request: FastifyRequest, reply: FastifyReply) {
-    this.categoryRepository = new CategoryRepository();
     try {
       const { id } = this.parser.parseIdFromParams(request);
       const category = await this.categoryRepository.getSingle(id);
-      this.categoryRepository.close();
       if (!category)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Category not found");
       const { services } = category;
@@ -236,7 +210,7 @@ export default class CategoryService {
           .filter((service) => service.state !== "Draft")
       );
     } catch (error) {
-      handleServiceError(error, [this.categoryRepository], reply);
+      handleServiceError(error, reply);
     }
   }
 }
