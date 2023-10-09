@@ -32,6 +32,34 @@ export default class ServiceRepository extends Repository {
   async getById(id: string) {
     const service = await this.prisma.service.findUnique({
       where: { id },
+      include: {
+        category: {
+          select: {
+            name: true,
+            slug: true,
+          },
+        },
+        User: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            address: true,
+            avatarImageURL: true,
+            reviews: {
+              include: {
+                client: {
+                  select: {
+                    avatarImageURL: true,
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
     return service;
   }

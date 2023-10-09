@@ -4,6 +4,7 @@ import {
   Dispute,
   ExperienceInfo,
   Portfolio,
+  Review,
   Service,
   User,
 } from "@prisma/client";
@@ -14,6 +15,7 @@ export type Provider = Omit<User, "loginId"> & {
   experiences: ExperienceInfo[];
   portfolios: Portfolio[];
   activities: Activity[];
+  reviews: Review[];
   createdServices: (Service & {
     category: {
       name: string;
@@ -27,7 +29,7 @@ export class ProviderRepository extends UserRepository {
     super();
   }
 
-  async getProviderById(id: string): Promise<Provider | null> {
+  async getProviderById(id: string) {
     const provider = await this.prisma.user.findUnique({
       where: { id },
       include: {
@@ -35,6 +37,17 @@ export class ProviderRepository extends UserRepository {
         experienceInfo: true,
         portfolio: true,
         providerActivities: true,
+        reviews: {
+          include: {
+            client: {
+              select: {
+                avatarImageURL: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
         services: {
           include: {
             category: {

@@ -11,7 +11,7 @@ export default class ServiceParser extends BaseParser {
       deliveryTime: z.string(),
       featuredImagesURL: z.array(z.string().url()).optional().default([]),
       minimumPrice: z.number().int().min(0),
-      isHighlighted: z.boolean(),
+      isHighlighted: z.boolean().optional().default(false),
       categoryName: z.string().min(3).max(255),
     });
     const parsedBody = bodySchema.parse(request.body);

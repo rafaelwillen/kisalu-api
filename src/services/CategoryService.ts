@@ -113,7 +113,7 @@ export default class CategoryService {
       const category = await this.categoryRepository.getBySlug(slug);
       if (!category)
         throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Category not found");
-      return reply.send(category);
+      return reply.send(omit(category, "creatorAdminId"));
     } catch (error) {
       handleServiceError(error, reply);
     }

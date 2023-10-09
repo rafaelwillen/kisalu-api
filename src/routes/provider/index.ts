@@ -18,6 +18,9 @@ export default function providerRoutes(
   app.put("/address", { onRequest: useUserIsProvider }, (req, rep) =>
     providerService.updateUserAddress(req, rep)
   );
+  app.get("/:id/rating", (req, res) =>
+    providerService.getProviderRatings(req, res)
+  );
 
   app.register(experienceInfoRoutes, { prefix: "/experience" });
   app.register(servicesRoutes, { prefix: "/services" });

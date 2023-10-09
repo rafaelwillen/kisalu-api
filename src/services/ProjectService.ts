@@ -32,7 +32,6 @@ export default class ProjectService {
         userId: client.id,
         bannerImageURL: parsedProject.bannerImageURL || null,
         categoryId: categoryToLink.id,
-        featuredImagesURL: parsedProject.featuredImagesURL || [],
       });
       return reply
         .code(HTTP_STATUS_CODE.CREATED)

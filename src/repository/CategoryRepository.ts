@@ -70,8 +70,29 @@ export default class CategoryRepository extends Repository {
     const category = await this.prisma.category.findUnique({
       where: { slug },
       include: {
-        services: true,
-        projects: true,
+        services: {
+          include: {
+            User: {
+              select: {
+                avatarImageURL: true,
+                firstName: true,
+                lastName: true,
+                reviews: true,
+              },
+            },
+          },
+        },
+        projects: {
+          include: {
+            User: {
+              select: {
+                avatarImageURL: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
       },
     });
     return category;

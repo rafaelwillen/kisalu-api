@@ -109,6 +109,18 @@ export default class ServiceService {
     }
   }
 
+  async getServiceById(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { id: serviceId } = this.parser.parseIdFromParams(request);
+      const service = await this.serviceRepository.getById(serviceId);
+      if (!service)
+        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Service not found");
+      return reply.send(omit(service, "userId", "categoryId"));
+    } catch (error) {
+      handleServiceError(error, reply);
+    }
+  }
+
   async deleteService(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { email } = request.user;
