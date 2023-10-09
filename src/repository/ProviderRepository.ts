@@ -37,6 +37,13 @@ export class ProviderRepository extends UserRepository {
         experienceInfo: true,
         portfolio: true,
         providerActivities: true,
+        address: true,
+        auth: {
+          select:{
+            role: true,
+            createdAt: true,
+          }
+        },
         reviews: {
           include: {
             client: {
@@ -61,6 +68,7 @@ export class ProviderRepository extends UserRepository {
       },
     });
     if (!provider) return null;
+    if (provider.auth.role !== "Provider") return null;
     return {
       ...provider,
       activities: provider.providerActivities,
@@ -68,6 +76,42 @@ export class ProviderRepository extends UserRepository {
       portfolios: provider.portfolio,
       createdServices: provider.services,
     };
+  }
+
+  async getAllProviders() {
+    const providers = await this.prisma.user.findMany({
+      where: {
+        AND: [
+          {
+            auth: {
+              role: "Provider",
+            },
+          },
+          {
+            address: {
+              isNot: null,
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        avatarImageURL: true,
+        biography: true,
+        birthDate: true,
+        gender: true,
+        experienceInfo: true,
+        portfolio: true,
+        reviews: true,
+        providerActivities: true,
+        services: true,
+        disputes: true,
+        address: true,
+      },
+    });
+    return providers;
   }
 
   async createProvider(data: CreatableUser) {

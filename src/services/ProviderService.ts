@@ -59,4 +59,25 @@ export class ProviderService extends UserService {
       handleServiceError(error, reply);
     }
   }
+
+  async getProviders(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const providers = await this.providerRepository.getAllProviders();
+      return reply.send(providers);
+    } catch (error) {
+      handleServiceError(error, reply);
+    }
+  }
+
+  async getProviderById(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { id } = this.parser.parseIdFromParams(request);
+      const provider = await this.providerRepository.getProviderById(id);
+      if (!provider)
+        throw new HTTPError(HTTP_STATUS_CODE.NOT_FOUND, "Provider not found");
+      return reply.send(provider);
+    } catch (error) {
+      handleServiceError(error, reply);
+    }
+  }
 }

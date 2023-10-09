@@ -21,6 +21,8 @@ export default function providerRoutes(
   app.get("/:id/rating", (req, res) =>
     providerService.getProviderRatings(req, res)
   );
+  app.get("/", (req, res) => providerService.getProviders(req, res));
+  app.get("/:id", (req, res) => providerService.getProviderById(req, res));
 
   app.register(experienceInfoRoutes, { prefix: "/experience" });
   app.register(servicesRoutes, { prefix: "/services" });
