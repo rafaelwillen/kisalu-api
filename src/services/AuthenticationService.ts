@@ -75,7 +75,7 @@ export default class AuthenticationService {
         updatedAt,
         createdAt,
         email,
-        ...omit(User, "id", "loginId", "address"),
+        ...omit(User, "loginId", "address"),
         address: User?.address
           ? {
               ...pick(User?.address, "county", "province", "addressLine"),

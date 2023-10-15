@@ -39,10 +39,12 @@ export class ProviderRepository extends UserRepository {
         providerActivities: true,
         address: true,
         auth: {
-          select:{
+          select: {
             role: true,
             createdAt: true,
-          }
+            phoneNumber: true,
+            email: true,
+          },
         },
         reviews: {
           include: {
@@ -68,7 +70,6 @@ export class ProviderRepository extends UserRepository {
       },
     });
     if (!provider) return null;
-    if (provider.auth.role !== "Provider") return null;
     return {
       ...provider,
       activities: provider.providerActivities,

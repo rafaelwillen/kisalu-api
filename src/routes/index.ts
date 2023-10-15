@@ -1,4 +1,5 @@
 import { FastifyInstance } from "fastify";
+import activitiesRoutes from "./activity";
 import addressRoutes from "./address";
 import adminRoutes from "./admin";
 import authenticationRoutes from "./auth";
@@ -21,6 +22,7 @@ async function routes(
   fastify.register(clientRoutes, { prefix: "/client" });
   fastify.register(providerRoutes, { prefix: "/provider" });
   fastify.register(servicesRoutes, { prefix: "/service" });
+  fastify.register(activitiesRoutes, { prefix: "/activity" });
 
   fastify.get("/", (_, reply) => {
     reply.send({

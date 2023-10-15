@@ -144,24 +144,24 @@ model Review {
 }
 
 model Activity {
-  id                  String        @id @default(uuid())
-  agreedValue         Int
-  state               ActivityState
-  startDate           DateTime
-  estimatedFinishDate DateTime
-  finishedDate        DateTime
-  createdAt           DateTime      @default(now())
-  client              User?         @relation("clientActivities", fields: [clientUserId], references: [id])
-  clientUserId        String?
-  provider            User?         @relation("providerActivities", fields: [providerUserId], references: [id])
-  providerUserId      String?
-  service             Service?      @relation(fields: [linkedServiceId], references: [id])
-  linkedServiceId     String?
-  dispute             Dispute?
-  project             Project?      @relation(fields: [linkedProjectId], references: [id])
-  linkedProjectId     String?
-  address             Address?
-  review              Review?
+  id                String        @id @default(uuid())
+  agreedValue       Int
+  state             ActivityState
+  startDate         DateTime
+  finishedDate      DateTime?
+  createdAt         DateTime      @default(now())
+  client            User?         @relation("clientActivities", fields: [clientUserId], references: [id])
+  clientUserId      String?
+  provider          User?         @relation("providerActivities", fields: [providerUserId], references: [id])
+  providerUserId    String?
+  service           Service?      @relation(fields: [linkedServiceId], references: [id])
+  linkedServiceId   String?
+  dispute           Dispute?
+  project           Project?      @relation(fields: [linkedProjectId], references: [id])
+  linkedProjectId   String?
+  address           Address?
+  review            Review?
+  activityDetails   String?
 }
 
 model Service {
