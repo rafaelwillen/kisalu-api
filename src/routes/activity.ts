@@ -2,7 +2,6 @@ import useEnsureAdminIsAuthenticated from "@/hooks/useEnsureAdminIsAuthenticated
 import useUserIsClient from "@/hooks/useUserIsClient";
 import useUserIsClientOrProvider from "@/hooks/useUserIsClientOrProvider";
 import ActivityService from "@/services/ActivityService";
-import PaymentService from "@/services/PaymentService.1";
 import { FastifyInstance } from "fastify";
 
 export default async function activitiesRoutes(
@@ -11,7 +10,6 @@ export default async function activitiesRoutes(
   done: () => void
 ) {
   const activityService = new ActivityService();
-  const paymentService = new PaymentService();
 
   app.post("/", { onRequest: useUserIsClient }, (req, res) =>
     activityService.create(req, res)

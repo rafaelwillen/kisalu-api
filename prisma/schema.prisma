@@ -176,7 +176,6 @@ model Service {
   featuredImagesURL String[]
   minimumPrice      Int
   isHighlighted     Boolean
-  deliveryTime      String
   activities        Activity[]
   category          Category?  @relation(fields: [categoryId], references: [id])
   categoryId        String?
